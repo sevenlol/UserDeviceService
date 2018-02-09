@@ -25,9 +25,12 @@ CREATE TABLE IF NOT EXISTS Device (
     type INT NOT NULL,
     mac VARCHAR(12) NOT NULL UNIQUE,
     name VARCHAR(50) NOT NULL,
+    pinCode INT NOT NULL,
     createdAt DATETIME NOT NULL,
     updatedAt DATETIME NOT NULL,
     FOREIGN KEY (type) REFERENCES DeviceType(type)
+      ON DELETE CASCADE
+      ON UPDATE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS Binding (
@@ -35,6 +38,10 @@ CREATE TABLE IF NOT EXISTS Binding (
     userId INT NOT NULL,
     deviceId INT NOT NULL,
     boundAt DATETIME NOT NULL,
-    FOREIGN KEY (userId) REFERENCES User(id),
+    FOREIGN KEY (userId) REFERENCES User(id)
+      ON DELETE CASCADE
+      ON UPDATE CASCADE,
     FOREIGN KEY (deviceId) REFERENCES Device(id)
+      ON DELETE CASCADE
+      ON UPDATE CASCADE
 );
