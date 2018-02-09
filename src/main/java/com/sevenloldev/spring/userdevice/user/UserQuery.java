@@ -5,15 +5,25 @@ import java.util.Map;
 
 import static com.google.common.base.Preconditions.*;
 
+/**
+ * Query object for {@link User} entities.
+ */
 public class UserQuery {
   private static final String DEFAULT_SORT_FIELD = "updatedAt";
   private static final boolean DEFAULT_SORT_ORDER = false;
+  /** pagination parameter (limit and offset) */
   private Integer limit;
   private Integer offset;
+  /** key-value pairs for filtering {@link User} entities */
   private Map<String, Object> kvs = new HashMap<>();
+  /** sorting field and order */
   private String sortField = DEFAULT_SORT_FIELD;
   private boolean asc = DEFAULT_SORT_ORDER;
 
+  /**
+   * Use a {@link User} object as filtering condition
+   * @param user name, email, enabled fields will be used as filtering value (if set)
+   */
   public UserQuery(User user) {
     checkNotNull(user);
     if (user.getEmail() != null) {
@@ -27,6 +37,9 @@ public class UserQuery {
     }
   }
 
+  /**
+   * Generate {@link UserQuery} with given {@link UserQueryRequest}
+   */
   public UserQuery(UserQueryRequest req) {
     checkNotNull(req);
     if (req.getEmail() != null) {
@@ -51,6 +64,8 @@ public class UserQuery {
       sortField = sortedBy;
     }
   }
+
+  // getters and setters
 
   public Integer getLimit() {
     return limit;

@@ -24,7 +24,7 @@ import org.springframework.stereotype.Repository;
 import static com.google.common.base.Preconditions.*;
 
 /**
- * 
+ * Managing CRUD operations for {@link User} using jdbc interfaces
  */
 @Repository
 public class JdbcUserRepository implements UserRepository {
@@ -38,6 +38,7 @@ public class JdbcUserRepository implements UserRepository {
   private static final String DELETE_SQL = "DELETE FROM User WHERE id= ?";
 
   @Autowired
+  /** Injected jdbc template */
   private JdbcTemplate template;
 
   @Override
@@ -177,6 +178,9 @@ public class JdbcUserRepository implements UserRepository {
     checkArgument(rows <= 1);
   }
 
+  /**
+   * Helper class that maps table rows to {@link User} object
+   */
   private class UserRowMapper implements RowMapper<User> {
     @Nullable
     @Override
@@ -193,6 +197,10 @@ public class JdbcUserRepository implements UserRepository {
     }
   }
 
+  /**
+   * Check if the user object contains empty fields
+   * @param user {@link User} to be checked
+   */
   private void checkOptional(User user) {
     checkNotNull(user);
     checkArgument(user.getEmail() == null || !user.getEmail().isEmpty());
@@ -200,6 +208,9 @@ public class JdbcUserRepository implements UserRepository {
     checkArgument(user.getPassword() == null || !user.getPassword().isEmpty());
   }
 
+  /**
+   * Check if the user object is missing required fields
+   */
   private void checkRequired(User user) {
     checkNotNull(user);
     checkNotNull(user.getName());
@@ -207,6 +218,9 @@ public class JdbcUserRepository implements UserRepository {
     checkNotNull(user.getPassword());
   }
 
+  /**
+   * Check if user query is valid
+   */
   private void check(UserQuery query) {
     checkNotNull(query);
     checkNotNull(query.getOffset());
@@ -215,6 +229,9 @@ public class JdbcUserRepository implements UserRepository {
     checkNotNull(query.getSortField());
   }
 
+  /**
+   * Check if user id is a string representing a valid number
+   */
   private void checkId(String id) {
     checkNotNull(id);
     checkArgument(!id.isEmpty());
@@ -225,11 +242,19 @@ public class JdbcUserRepository implements UserRepository {
     }
   }
 
+  /**
+   * Check and parse user ID from string to long
+   */
   private long getUserId(String id) {
     checkId(id);
     return Long.parseLong(id);
   }
 
+  /**
+   * Generate SQL query string with the given {@link UserQuery}
+   * @param query target query
+   * @return generated SQL query string (filtering,sorting and pagination)
+   */
   private String getQuerySql(UserQuery query) {
     check(query);
     StringBuilder sb = new StringBuilder();
@@ -247,6 +272,11 @@ public class JdbcUserRepository implements UserRepository {
     return String.format(QUERY_SQL, sb.toString(), query.isAsc() ? "ASC" : "DESC");
   }
 
+  /**
+   * Generate update SQL query (not including ID where clause)
+   * @param user target {@link User}
+   * @return generated SQL query string for update
+   */
   private String getUpdateSql(User user) {
     checkArgument(user.getEmail() != null ||
         user.getName() != null || user.getPassword() != null);
@@ -264,6 +294,9 @@ public class JdbcUserRepository implements UserRepository {
     return String.format(UPDATE_SQL, sb.toString());
   }
 
+  /**
+   * Helper method for generating update attribute-value pair in SQL query string
+   */
   private void appendKey(StringBuilder sb, String key) {
     String format = "%s = ?";
     if (sb.length() > 0) {

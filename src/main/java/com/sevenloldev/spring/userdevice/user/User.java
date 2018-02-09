@@ -4,23 +4,35 @@ import java.time.LocalDateTime;
 import org.hibernate.validator.constraints.Email;
 import org.hibernate.validator.constraints.NotEmpty;
 
+/**
+ * Entity describing a user
+ */
 public class User {
+  /** unique user ID */
   private String id;
 
+  /** username */
   @NotEmpty
   private String name;
 
+  /** user email */
   @Email
   private String email;
 
+  /** user password */
   @NotEmpty
   private String password;
 
+  /** when is this user created */
   private LocalDateTime createdAt;
 
+  /** time of last update on this user entity */
   private LocalDateTime updatedAt;
 
+  /** flag to enable/disable this user */
   private Boolean enabled;
+
+  // getter and setter
 
   public String getId() {
     return id;
