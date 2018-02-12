@@ -30,9 +30,10 @@ public class DeviceTypeController {
   }
 
   @GetMapping("/types/devices")
-  public QueryResponse<DeviceType> queryDeviceTypes() {
-    // TODO implement
-    return null;
+  public QueryResponse<DeviceType> queryDeviceTypes(
+      @Valid  DeviceTypeQuery query, BindingResult result) {
+    check(result);
+    return repo.query(query);
   }
 
   @GetMapping("/types/devices/{type}")
