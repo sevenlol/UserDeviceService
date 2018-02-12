@@ -28,7 +28,10 @@ dependencies {
     compile ('org.springframework.boot:spring-boot-starter-jdbc') {
         exclude group:'org.apache.tomcat', module: 'tomcat-jdbc'
     }
+    compile ('org.springframework.boot:spring-boot-starter-data-jpa')
     compile ('mysql:mysql-connector-java')
+    compile group: 'org.hibernate', name: 'hibernate-core', version: '5.2.12.Final'
+    compile group: 'org.hibernate', name: 'hibernate-entitymanager', version: '5.2.12.Final'
     compile group: 'org.hibernate', name: 'hibernate-validator', version: '5.4.1.Final'
     compile group: 'com.google.guava', name: 'guava', version: '23.6-jre'
     testCompile group: 'junit', name: 'junit', version: '4.12'

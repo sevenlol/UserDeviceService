@@ -1,16 +1,21 @@
 package com.sevenloldev.spring.userdevice.user;
 
+import com.sevenloldev.spring.userdevice.util.validation.Optional;
+import com.sevenloldev.spring.userdevice.util.validation.Required;
 import java.util.HashMap;
 import java.util.Map;
 import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.validation.BindingResult;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -23,8 +28,9 @@ public class UserController {
 
   /** Create User API */
   @PostMapping("/users")
+  @ResponseStatus(HttpStatus.CREATED)
   public Map<String, String> createUser(
-      @Valid @RequestBody User user, BindingResult result) {
+      @Validated(Required.class) @RequestBody User user, BindingResult result) {
     check(result);
     return getUserIdResponse(repo.create(user));
   }
@@ -47,7 +53,7 @@ public class UserController {
   @PutMapping("/users/{id}")
   public Map<String, String> updateUser(
       @PathVariable("id") String id,
-      @Valid @RequestBody User user, BindingResult result) {
+      @Validated(Optional.class) @RequestBody User user, BindingResult result) {
     check(result);
     repo.update(id, user);
     return getUserIdResponse(id);
