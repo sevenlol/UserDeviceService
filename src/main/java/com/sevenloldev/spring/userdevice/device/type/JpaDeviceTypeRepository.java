@@ -1,7 +1,9 @@
 package com.sevenloldev.spring.userdevice.device.type;
 
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.repository.CrudRepository;
 
-public interface JpaDeviceTypeRepository extends CrudRepository<DeviceType, Integer> {
+public interface JpaDeviceTypeRepository extends CrudRepository<DeviceType, Integer>,
+    JpaSpecificationExecutor<DeviceType> {
 
 }

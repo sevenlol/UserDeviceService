@@ -6,7 +6,7 @@ import javax.validation.constraints.Pattern;
 import org.hibernate.validator.constraints.Length;
 
 public class DeviceTypeQuery {
-  private static final String DEFAULT_SORT = "-updatedAt";
+  private static final String DEFAULT_SORT = "-type";
   /** pagination parameters, limit >= 1, offset >= 0 */
   @NotNull
   @Min(value = 0)
@@ -24,7 +24,7 @@ public class DeviceTypeQuery {
   @Length(max = 100)
   private String manufacturer;
 
-  @Pattern(regexp = "^-?(name|modelname|manufacturer|createdAt|updatedAt)$")
+  @Pattern(regexp = "^-?(type|name|modelname|manufacturer)$")
   private String sort = DEFAULT_SORT;
 
   /* getters and setters */
