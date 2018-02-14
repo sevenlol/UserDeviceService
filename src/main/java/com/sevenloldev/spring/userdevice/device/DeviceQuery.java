@@ -16,7 +16,7 @@ public class DeviceQuery {
 
   /* filtering */
 
-  private String type;
+  private Integer type;
   private String mac;
   private String name;
 
@@ -41,11 +41,11 @@ public class DeviceQuery {
     this.limit = limit;
   }
 
-  public String getType() {
+  public Integer getType() {
     return type;
   }
 
-  public void setType(String type) {
+  public void setType(Integer type) {
     this.type = type;
   }
 

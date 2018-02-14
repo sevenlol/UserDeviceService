@@ -1,7 +1,10 @@
 package com.sevenloldev.spring.userdevice.device;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.sevenloldev.spring.userdevice.device.type.DeviceType;
+import com.sevenloldev.spring.userdevice.util.validation.Optional;
+import com.sevenloldev.spring.userdevice.util.validation.Required;
 import java.time.LocalDateTime;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -36,26 +39,26 @@ public class Device {
   private Integer id;
 
   /** device type */
-  @NotNull
+  @NotNull(groups = { Required.class })
   @Transient
   private Integer type;
 
   /** device name */
-  @NotNull
-  @Length(min = 1, max = 50)
+  @NotNull(groups = { Required.class })
+  @Length(min = 1, max = 50, groups = { Required.class, Optional.class })
   @Column
   private String name;
 
   /** mac address */
-  @NotNull
-  @Pattern(regexp = "^[a-fA-F0-9]{12}$")
+  @NotNull(groups = { Required.class })
+  @Pattern(regexp = "^[a-fA-F0-9]{12}$", groups = { Required.class, Optional.class })
   @Column(unique = true)
   private String mac;
 
   /** pin code */
-  @NotNull
-  @Min(0)
-  @Max(9999)
+  @NotNull(groups = Required.class)
+  @Min(value = 0, groups = { Required.class, Optional.class })
+  @Max(value = 9999, groups = { Required.class, Optional.class })
   @Column
   private Integer pinCode;
 
@@ -73,10 +76,17 @@ public class Device {
   @JsonIgnore
   private DeviceType deviceType;
 
+  @JsonIgnore
   public Integer getId() {
     return id;
   }
 
+  @JsonProperty("id")
+  public String getDeviceId() {
+    return id == null ? "" : id.toString();
+  }
+
+  @JsonIgnore
   public void setId(Integer id) {
     this.id = id;
   }
