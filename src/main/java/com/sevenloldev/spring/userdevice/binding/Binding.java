@@ -81,6 +81,9 @@ public class Binding {
   @JsonIgnore
   public void setDevice(Device device) {
     this.device = device;
+    if (device != null) {
+      this.deviceId = device.getId();
+    }
   }
 
   @JsonProperty("device_id")
@@ -111,8 +114,9 @@ public class Binding {
     this.deviceId = deviceId;
   }
 
-  public Integer getUserId() {
-    return userId;
+  @JsonProperty("user_id")
+  public String getUserId() {
+    return userId == null ? null : userId.toString();
   }
 
   @JsonProperty("user_id")
