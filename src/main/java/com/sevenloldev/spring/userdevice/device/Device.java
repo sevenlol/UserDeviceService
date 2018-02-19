@@ -1,6 +1,8 @@
 package com.sevenloldev.spring.userdevice.device;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.sevenloldev.spring.userdevice.device.type.DeviceType;
 import com.sevenloldev.spring.userdevice.util.validation.Optional;
@@ -32,6 +34,7 @@ import org.hibernate.validator.constraints.Length;
  */
 @Entity
 @Table(name = "Device")
+@JsonInclude(Include.NON_NULL)
 public class Device {
   /** unique device ID */
   @Id

@@ -38,6 +38,7 @@ CREATE TABLE IF NOT EXISTS Binding (
     userId INT NOT NULL,
     deviceId INT NOT NULL,
     boundAt DATETIME NOT NULL,
+    UNIQUE KEY userId (userId, deviceId),
     FOREIGN KEY (userId) REFERENCES User(id)
       ON DELETE CASCADE
       ON UPDATE CASCADE,

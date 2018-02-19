@@ -75,7 +75,6 @@ public class SpringDataDeviceTypeRepository implements DeviceTypeRepository {
     try {
       result = repo.findById(id);
     } catch (Exception e) {
-      e.printStackTrace();
       throw new ServerErrorException(e);
     }
     if (!result.isPresent()) {
