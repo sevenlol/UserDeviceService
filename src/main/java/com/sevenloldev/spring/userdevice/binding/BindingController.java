@@ -1,8 +1,10 @@
 package com.sevenloldev.spring.userdevice.binding;
 
+import com.sevenloldev.spring.userdevice.util.response.QueryResponse;
 import com.sevenloldev.spring.userdevice.util.validation.Required;
 import java.util.HashMap;
 import java.util.Map;
+import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.BindingResult;
@@ -28,6 +30,13 @@ public class BindingController {
     System.out.println(result.getAllErrors());
     check(result);
     return getBindingIdResponse(repo.create(binding));
+  }
+
+  @GetMapping("/bindings")
+  public QueryResponse<Binding> queryBindings(@Valid BindingQuery query, BindingResult result) {
+    System.out.println(query.getDeviceId());
+    check(result);
+    return repo.query(query);
   }
 
   @GetMapping("/bindings/{id}")
