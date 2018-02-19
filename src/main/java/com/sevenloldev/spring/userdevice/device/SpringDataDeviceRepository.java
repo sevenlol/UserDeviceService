@@ -85,7 +85,6 @@ public class SpringDataDeviceRepository implements DeviceRepository {
       );
       return response;
     } catch (Exception e) {
-      e.printStackTrace();
       throw new ServerErrorException(e);
     }
   }

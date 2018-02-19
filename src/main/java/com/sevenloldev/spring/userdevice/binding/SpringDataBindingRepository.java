@@ -5,11 +5,27 @@ import com.sevenloldev.spring.userdevice.util.error.ResourceNotExistException;
 import com.sevenloldev.spring.userdevice.util.error.ServerErrorException;
 import com.sevenloldev.spring.userdevice.util.response.QueryResponse;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.From;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
+import javax.validation.ConstraintViolation;
+import javax.validation.Validation;
+import javax.validation.Validator;
+import javax.validation.ValidatorFactory;
 import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Repository;
 
 import static com.google.common.base.Preconditions.*;
@@ -54,7 +70,24 @@ public class SpringDataBindingRepository implements BindingRepository {
 
   @Override
   public QueryResponse<Binding> query(BindingQuery query) {
-    return null;
+    Specification<Binding> spec = getSpec(query);
+    int page = query.getOffset() / query.getLimit();
+    Pageable pageable = PageRequest.of(page, query.getLimit());
+    try {
+      Page<Binding> result = repo.findAll(spec, pageable);
+      List<Binding> bindings = new ArrayList<>();
+      for (Binding binding : result) {
+        // only id
+        bindings.add(transform(binding, false));
+      }
+      return new QueryResponse<>(
+          (int) result.getTotalElements(),
+          bindings
+      );
+    } catch (Exception e) {
+      e.printStackTrace();
+      throw new ServerErrorException(e);
+    }
   }
 
   @Override
@@ -124,5 +157,66 @@ public class SpringDataBindingRepository implements BindingRepository {
     }
 
     return binding;
+  }
+
+  private Specification<Binding> getSpec(BindingQuery query) {
+    check(query);
+    return new BindingSpec(query);
+  }
+
+  private void check(BindingQuery query) {
+    checkNotNull(query);
+    // NOTE trying out validator, not using DI
+    ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
+    Validator validator = factory.getValidator();
+    Set<ConstraintViolation<BindingQuery>> result =  validator.validate(query);
+    checkNotNull(result);
+    if (!result.isEmpty()) {
+      throw new IllegalArgumentException();
+    }
+    // TODO use hibernate validator cross field validation
+    // offset is multiple of limit
+    checkArgument(query.getOffset() % query.getLimit() == 0);
+  }
+
+  private class BindingSpec implements Specification<Binding> {
+    private final BindingQuery query;
+
+    public BindingSpec(BindingQuery query) {
+      checkNotNull(query);
+      this.query = query;
+    }
+
+    @Override
+    public Predicate toPredicate(Root<Binding> root, CriteriaQuery<?> query,
+        CriteriaBuilder cb) {
+      return configurePredicates(root, query, cb);
+    }
+
+    private Predicate configurePredicates(From<?, ?> root, CriteriaQuery<?> query,
+        CriteriaBuilder cb) {
+      List<Predicate> predicates = new ArrayList<>();
+      // configure filtering predicate
+      if (this.query.getUserId() != null) {
+        predicates.add(cb.equal(root.get("userId"), this.query.getUserId()));
+      }
+      if (this.query.getDeviceId() != null) {
+        predicates.add(cb.equal(root.get("device").get("id"), this.query.getDeviceId()));
+      }
+
+      // configure order by (in criteria query)
+      String sort = this.query.getSort();
+      boolean asc = true;
+      if (sort.startsWith("-")) {
+        asc = false;
+        sort = sort.substring(1);
+      }
+      if (asc) {
+        query.orderBy(cb.asc(root.get(sort)));
+      } else {
+        query.orderBy(cb.desc(root.get(sort)));
+      }
+      return cb.and(predicates.toArray(new Predicate[] {}));
+    }
   }
 }
