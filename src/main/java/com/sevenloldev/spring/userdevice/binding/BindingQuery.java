@@ -8,6 +8,7 @@ import javax.validation.constraints.Pattern;
 
 public class BindingQuery {
   private static final String DEFAULT_SORT = "-boundAt";
+  private static final String ENTITY_DEVICE = "device";
 
   /** pagination parameters, limit >= 1, offset >= 0 */
   @NotNull
@@ -21,6 +22,11 @@ public class BindingQuery {
 
   private Integer userId;
   private Integer deviceId;
+
+  /* embedded entities */
+
+  @Pattern(regexp = "^device$")
+  private String entities;
 
   /* sorting */
 
@@ -49,7 +55,7 @@ public class BindingQuery {
     return userId;
   }
 
-  public void setUserid(String userId) {
+  public void setUserId(String userId) {
     try {
       this.userId = Integer.parseInt(userId);
     } catch (Exception e) {
@@ -67,6 +73,18 @@ public class BindingQuery {
     } catch (Exception e) {
       // ignore
     }
+  }
+
+  public String getEntities() {
+    return entities;
+  }
+
+  public void setEntities(String entities) {
+    this.entities = entities;
+  }
+
+  public boolean attachDevices() {
+    return entities != null && entities.contains(ENTITY_DEVICE);
   }
 
   public String getSort() {

@@ -12,6 +12,7 @@ import java.util.Set;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.From;
+import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.validation.ConstraintViolation;
@@ -78,7 +79,7 @@ public class SpringDataBindingRepository implements BindingRepository {
       List<Binding> bindings = new ArrayList<>();
       for (Binding binding : result) {
         // only id
-        bindings.add(transform(binding, false));
+        bindings.add(transform(binding, query.attachDevices()));
       }
       return new QueryResponse<>(
           (int) result.getTotalElements(),
@@ -190,6 +191,13 @@ public class SpringDataBindingRepository implements BindingRepository {
     @Override
     public Predicate toPredicate(Root<Binding> root, CriteriaQuery<?> query,
         CriteriaBuilder cb) {
+      if (this.query.attachDevices()) {
+        // join device
+        if (query.getResultType() != Long.class && query.getResultType() != long.class) {
+          // only fetch join if the query is not "count"
+          root.fetch("device", JoinType.INNER);
+        }
+      }
       return configurePredicates(root, query, cb);
     }
 

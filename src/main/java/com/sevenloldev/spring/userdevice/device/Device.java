@@ -8,6 +8,8 @@ import com.sevenloldev.spring.userdevice.device.type.DeviceType;
 import com.sevenloldev.spring.userdevice.util.validation.Optional;
 import com.sevenloldev.spring.userdevice.util.validation.Required;
 import java.time.LocalDateTime;
+import javax.persistence.Access;
+import javax.persistence.AccessType;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -30,6 +32,8 @@ import javax.validation.constraints.Pattern;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.validator.constraints.Length;
 
+import static com.google.common.base.Preconditions.*;
+
 /**
  * Entity describing a device
  */
@@ -37,6 +41,21 @@ import org.hibernate.validator.constraints.Length;
 @Table(name = "Device")
 @JsonInclude(Include.NON_NULL)
 public class Device {
+
+  public Device() {}
+  public Device(Device device) {
+    checkNotNull(device);
+    this.id = device.getId();
+    this.mac = device.getMac();
+    this.type = device.getType();
+    if (type == null && device.getDeviceType() != null) {
+      type = device.getDeviceType().getType();
+    }
+    this.pinCode = device.getPinCode();
+    this.createdAt = device.getCreatedAt();
+    this.updatedAt = device.getUpdatedAt();
+  }
+
   /** unique device ID */
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -75,8 +94,9 @@ public class Device {
   private LocalDateTime updatedAt;
 
   /** embedded device type */
-  @OneToOne(cascade = CascadeType.MERGE)
+  @OneToOne(cascade = CascadeType.MERGE, fetch = FetchType.LAZY)
   @JoinColumn(name = "type")
+  @Access(AccessType.PROPERTY)
   @JsonIgnore
   private DeviceType deviceType;
 
