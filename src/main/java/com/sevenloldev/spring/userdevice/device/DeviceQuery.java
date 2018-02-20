@@ -4,6 +4,9 @@ import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 
+/**
+ * Request object for querying {@link Device} entities
+ */
 public class DeviceQuery {
   private static final String DEFAULT_SORT = "-updatedAt";
   /** pagination parameters, limit >= 1, offset >= 0 */
@@ -20,6 +23,7 @@ public class DeviceQuery {
   private String mac;
   private String name;
 
+  /* sorting string, if starts with "-" => descending, otherwise ascending */
   @Pattern(regexp = "^-?(type|name|mac|createdAt|updatedAt)$")
   private String sort = DEFAULT_SORT;
 

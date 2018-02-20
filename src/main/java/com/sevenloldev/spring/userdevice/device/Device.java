@@ -18,18 +18,13 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.MappedSuperclass;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
-import javax.persistence.Temporal;
 import javax.persistence.Transient;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
-import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
-import org.hibernate.annotations.Cascade;
 import org.hibernate.validator.constraints.Length;
 
 import static com.google.common.base.Preconditions.*;
@@ -43,6 +38,11 @@ import static com.google.common.base.Preconditions.*;
 public class Device {
 
   public Device() {}
+
+  /**
+   * construct a clone of the input device
+   * @param device target device object to be cloned, must not be {@literal null}
+   */
   public Device(Device device) {
     checkNotNull(device);
     this.id = device.getId();
@@ -94,7 +94,7 @@ public class Device {
   private LocalDateTime updatedAt;
 
   /** embedded device type */
-  @OneToOne(cascade = CascadeType.MERGE, fetch = FetchType.LAZY)
+  @OneToOne(cascade = CascadeType.DETACH, fetch = FetchType.LAZY)
   @JoinColumn(name = "type")
   @Access(AccessType.PROPERTY)
   @JsonIgnore
@@ -105,6 +105,7 @@ public class Device {
     return id;
   }
 
+  /* generate string device id for response serialization */
   @JsonProperty("id")
   public String getDeviceId() {
     return id == null ? "" : id.toString();
@@ -139,6 +140,7 @@ public class Device {
     this.mac = mac;
   }
 
+  @JsonProperty("pin_code")
   public Integer getPinCode() {
     return pinCode;
   }
@@ -147,6 +149,7 @@ public class Device {
     this.pinCode = pinCode;
   }
 
+  @JsonProperty("created_at")
   public LocalDateTime getCreatedAt() {
     return createdAt;
   }
@@ -155,6 +158,7 @@ public class Device {
     this.createdAt = createdAt;
   }
 
+  @JsonProperty("updated_at")
   public LocalDateTime getUpdatedAt() {
     return updatedAt;
   }
