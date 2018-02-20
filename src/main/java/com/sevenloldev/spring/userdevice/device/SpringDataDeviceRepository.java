@@ -77,6 +77,7 @@ public class SpringDataDeviceRepository implements DeviceRepository {
       Page<Device> devices = repo.findAll(spec, pageable);
       List<Device> result = new ArrayList<>();
       for (Device type : devices) {
+        type.setType(type.getDeviceType().getType());
         result.add(type);
       }
       QueryResponse<Device> response = new QueryResponse<>(
