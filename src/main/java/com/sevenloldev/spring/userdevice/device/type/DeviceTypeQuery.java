@@ -5,6 +5,9 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import org.hibernate.validator.constraints.Length;
 
+/**
+ * Request object for querying {@link DeviceType} entities
+ */
 public class DeviceTypeQuery {
   private static final String DEFAULT_SORT = "-type";
   /** pagination parameters, limit >= 1, offset >= 0 */
@@ -24,6 +27,7 @@ public class DeviceTypeQuery {
   @Length(max = 100)
   private String manufacturer;
 
+  /* sorting string, if starts with "-" => descending, otherwise ascending */
   @Pattern(regexp = "^-?(type|name|modelname|manufacturer)$")
   private String sort = DEFAULT_SORT;
 

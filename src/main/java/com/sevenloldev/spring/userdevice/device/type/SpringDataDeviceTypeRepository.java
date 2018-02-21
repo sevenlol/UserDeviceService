@@ -27,6 +27,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import static com.google.common.base.Preconditions.*;
 
+/**
+ * {@link DeviceTypeRepository} implementation using generated JPA repository
+ * interface
+ */
 @Repository
 public class SpringDataDeviceTypeRepository implements DeviceTypeRepository {
 
@@ -39,9 +43,11 @@ public class SpringDataDeviceTypeRepository implements DeviceTypeRepository {
 
     DeviceType res = repo.save(deviceType);
     if (res.getType() == null) {
+      // failed to auto generate type value
       throw new ServerErrorException();
     }
 
+    // return as string for flexibility
     return res.getType().toString();
   }
 
@@ -53,17 +59,20 @@ public class SpringDataDeviceTypeRepository implements DeviceTypeRepository {
     Pageable pageable = PageRequest.of(page, query.getLimit());
     try {
       Page<DeviceType> deviceTypes = repo.findAll(spec, pageable);
+      // retrieve from page object
       List<DeviceType> result = new ArrayList<>();
       for (DeviceType type : deviceTypes) {
         result.add(type);
       }
       QueryResponse<DeviceType> response = new QueryResponse<>(
+          // total device types that satisfy current query condition
           (int) deviceTypes.getTotalElements(),
+          // current batch
           result
       );
       return response;
     } catch (Exception e) {
-      e.printStackTrace();
+      // operation failed
       throw new ServerErrorException(e);
     }
   }
@@ -75,9 +84,11 @@ public class SpringDataDeviceTypeRepository implements DeviceTypeRepository {
     try {
       result = repo.findById(id);
     } catch (Exception e) {
+      // operation failed
       throw new ServerErrorException(e);
     }
     if (!result.isPresent()) {
+      // device type not found
       throw new ResourceNotExistException();
     }
     return result.get();
@@ -88,14 +99,17 @@ public class SpringDataDeviceTypeRepository implements DeviceTypeRepository {
   public void update(String type, DeviceType deviceType) {
     // FIXME find a better way
     int id = getType(type);
+    // check if there are fields for update and there is no invalid fields
     checkOptional(deviceType);
 
     try {
       Optional<DeviceType> result = repo.findById(id);
       if (!result.isPresent()) {
+        // device type not found
         throw new EmptyResultDataAccessException(1);
       }
       DeviceType typeInDb = result.get();
+      // merge new state into the existing ones
       if (deviceType.getName() != null) {
         typeInDb.setName(deviceType.getName());
       }
@@ -132,6 +146,10 @@ public class SpringDataDeviceTypeRepository implements DeviceTypeRepository {
     }
   }
 
+  /**
+   * Check if all necessary fields are present
+   * @param type target device type object
+   */
   private void checkRequired(DeviceType type) {
     checkNotNull(type);
     checkNotNull(type.getName());
@@ -139,6 +157,10 @@ public class SpringDataDeviceTypeRepository implements DeviceTypeRepository {
     checkNotNull(type.getManufacturer());
   }
 
+  /**
+   * Check if there is at least one non-null field for update and there are no invalid fields
+   * @param type target device type object
+   */
   private void checkOptional(DeviceType type) {
     checkNotNull(type);
     checkArgument(type.getName() != null || type.getDescription() != null ||
@@ -149,6 +171,7 @@ public class SpringDataDeviceTypeRepository implements DeviceTypeRepository {
     checkNonEmptyString(type.getManufacturer());
   }
 
+  /** string is non-empty (if present) */
   private void checkNonEmptyString(String s) {
     if (s != null) {
       checkArgument(!s.isEmpty());
@@ -168,16 +191,19 @@ public class SpringDataDeviceTypeRepository implements DeviceTypeRepository {
     }
   }
 
+  /** retrieve integer value of the device type */
   private int getType(String type) {
     checkType(type);
     return Integer.parseInt(type);
   }
 
+  /** generate JPA specification for querying device type */
   private Specification<DeviceType> getSpec(DeviceTypeQuery query) {
     check(query);
     return new DeviceTypeSpec(query);
   }
 
+  /** check if the device type query object is valid */
   private void check(DeviceTypeQuery query) {
     checkNotNull(query);
     // NOTE trying out validator, not using DI
@@ -193,6 +219,9 @@ public class SpringDataDeviceTypeRepository implements DeviceTypeRepository {
     checkArgument(query.getOffset() % query.getLimit() == 0);
   }
 
+  /**
+   * JPA Specification class for querying {@link DeviceType}
+   */
   private class DeviceTypeSpec implements Specification<DeviceType> {
     private final DeviceTypeQuery query;
 
