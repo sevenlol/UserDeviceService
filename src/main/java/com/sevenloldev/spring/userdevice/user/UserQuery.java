@@ -17,7 +17,7 @@ public class UserQuery {
   /** key-value pairs for filtering {@link User} entities */
   private Map<String, Object> kvs = new HashMap<>();
   /** sorting field and order */
-  private String sortField = DEFAULT_SORT_FIELD;
+  private String sort = DEFAULT_SORT_FIELD;
   private boolean asc = DEFAULT_SORT_ORDER;
 
   /**
@@ -55,13 +55,15 @@ public class UserQuery {
     }
     limit = req.getLimit();
     offset = req.getOffset();
-    if (req.getSortedBy() != null) {
-      String sortedBy = req.getSortedBy();
+    if (req.getSort() != null) {
+      String sortedBy = req.getSort();
       if (sortedBy.startsWith("-")) {
         asc = false;
         sortedBy = sortedBy.substring(1);
+      } else {
+        asc = true;
       }
-      sortField = sortedBy;
+      sort = sortedBy;
     }
   }
 
@@ -87,8 +89,8 @@ public class UserQuery {
     return kvs;
   }
 
-  public String getSortField() {
-    return sortField;
+  public String getSort() {
+    return sort;
   }
 
   public boolean isAsc() {

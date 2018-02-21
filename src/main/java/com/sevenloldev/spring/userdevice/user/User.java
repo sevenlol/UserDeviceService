@@ -1,26 +1,35 @@
 package com.sevenloldev.spring.userdevice.user;
 
+import com.sevenloldev.spring.userdevice.util.validation.Optional;
+import com.sevenloldev.spring.userdevice.util.validation.Required;
 import java.time.LocalDateTime;
+import javax.validation.constraints.NotNull;
 import org.hibernate.validator.constraints.Email;
+import org.hibernate.validator.constraints.Length;
 import org.hibernate.validator.constraints.NotEmpty;
 
 /**
  * Entity describing a user
  */
 public class User {
+  private static final boolean DEFAULT_ENABLED = false;
+
   /** unique user ID */
   private String id;
 
   /** username */
-  @NotEmpty
+  @NotNull(groups = { Required.class })
+  @Length(min = 1, groups = { Required.class, Optional.class})
   private String name;
 
   /** user email */
-  @Email
+  @NotNull(groups = { Required.class })
+  @Email(groups = { Required.class, Optional.class })
   private String email;
 
   /** user password */
-  @NotEmpty
+  @NotNull(groups = { Required.class })
+  @Length(min = 6, groups = { Required.class, Optional.class })
   private String password;
 
   /** when is this user created */
@@ -30,7 +39,7 @@ public class User {
   private LocalDateTime updatedAt;
 
   /** flag to enable/disable this user */
-  private Boolean enabled;
+  private Boolean enabled = DEFAULT_ENABLED;
 
   // getter and setter
 

@@ -25,7 +25,7 @@ public class UserQueryRequest {
    *  E.g., -email to sort email in descending order
    */
   @Pattern(regexp = "^-?(name|email|createdAt|updatedAt)$")
-  private String sortedBy;
+  private String sort;
 
   /** getters and setters */
 
@@ -65,12 +65,12 @@ public class UserQueryRequest {
     return enabled;
   }
 
-  public String getSortedBy() {
-    return sortedBy;
+  public String getSort() {
+    return sort;
   }
 
-  public void setSortedBy(String sortedBy) {
-    this.sortedBy = sortedBy;
+  public void setSort(String sort) {
+    this.sort = sort;
   }
 
   public void setEnabled(Boolean enabled) {
