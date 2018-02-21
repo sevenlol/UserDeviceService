@@ -31,6 +31,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import static com.google.common.base.Preconditions.*;
 
+/**
+ * {@link DeviceRepository} implementation using generated JPA repository
+ * interface
+ */
 @Repository
 public class SpringDataDeviceRepository implements DeviceRepository {
   private static final String UNIQUE_MAC_CONSTRAINT_NAME = "mac";
@@ -58,11 +62,14 @@ public class SpringDataDeviceRepository implements DeviceRepository {
     try {
       result = repo.save(device);
     } catch (DataIntegrityViolationException e) {
+      // duplicate mac address or invalid device type
       throw handleIntegrityViolationException(e);
     } catch (Exception e) {
+      // operation failed
       throw new ServerErrorException(e);
     }
     if (result.getId() == null) {
+      // failed to generate device ID
       throw new ServerErrorException();
     }
     return result.getId().toString();
@@ -77,15 +84,20 @@ public class SpringDataDeviceRepository implements DeviceRepository {
       Page<Device> devices = repo.findAll(spec, pageable);
       List<Device> result = new ArrayList<>();
       for (Device type : devices) {
+        // set the device type for response
+        // only the type (not retrieving the entire DeviceType object)
         type.setType(type.getDeviceType().getType());
         result.add(type);
       }
       QueryResponse<Device> response = new QueryResponse<>(
+          // total count that matches the spec (query)
           (int) devices.getTotalElements(),
+          // current batch
           result
       );
       return response;
     } catch (Exception e) {
+      // operation failed
       throw new ServerErrorException(e);
     }
   }
@@ -97,9 +109,11 @@ public class SpringDataDeviceRepository implements DeviceRepository {
     try {
       result = repo.findById(deviceId);
     } catch (Exception e) {
+      // operation failed
       throw new ServerErrorException(e);
     }
     if (!result.isPresent()) {
+      // no device associated with the given ID
       throw new ResourceNotExistException();
     }
     return processDeviceResponse(result.get());
@@ -108,9 +122,12 @@ public class SpringDataDeviceRepository implements DeviceRepository {
   @Override
   public void update(String id, Device device) {
     int deviceId = getId(id);
+    // check if new state has invalid property
     checkOptional(device);
 
     try {
+      // retrieve and update
+      // TODO generate update query dynamically
       getNUpdate(deviceId, device);
     } catch (DataIntegrityViolationException e) {
       // mac already exist or device type does not exist
@@ -132,16 +149,24 @@ public class SpringDataDeviceRepository implements DeviceRepository {
     }
   }
 
+  /**
+   * Helper method to retrieve the device, merge its fields with the new state
+   * and save to the database atomically
+   * @param deviceId ID of the target device, should not be {@literal null}
+   * @param device new state to be merged into the current one, should have at
+   * least one update field
+   */
   @Transactional
   private void getNUpdate(int deviceId, Device device) {
     try {
       Optional<Device> result = repo.findById(deviceId);
       if (!result.isPresent()) {
+        // device with given ID does not exist
         throw new EmptyResultDataAccessException(1);
       }
       Device deviceInDb = result.get();
       if (device.getType() != null) {
-        // set device type
+        // configure device type
         DeviceType type = new DeviceType();
         type.setType(device.getType());
         deviceInDb.setDeviceType(type);
@@ -157,10 +182,11 @@ public class SpringDataDeviceRepository implements DeviceRepository {
       if (device.getPinCode() != null) {
         deviceInDb.setPinCode(device.getPinCode());
       }
+      // set update time
       deviceInDb.setUpdatedAt(LocalDateTime.now());
       repo.save(deviceInDb);
     } catch (DataIntegrityViolationException e) {
-      e.printStackTrace();
+      // new mac already exist or new device type does not exist
       throw e;
     } catch (EmptyResultDataAccessException e) {
       // device does not exist
@@ -171,6 +197,10 @@ public class SpringDataDeviceRepository implements DeviceRepository {
     }
   }
 
+  /**
+   * Check if {@link Device} object contains all required field
+   * @param device device object to be checked
+   */
   private void checkRequired(Device device) {
     checkNotNull(device);
     checkNotNull(device.getMac());
@@ -178,6 +208,11 @@ public class SpringDataDeviceRepository implements DeviceRepository {
     checkNotNull(device.getPinCode());
   }
 
+  /**
+   * Check if {@link Device} object has at least one field and all fields
+   * are valid
+   * @param device device object to be checked
+   */
   private void checkOptional(Device device) {
     checkNotNull(device);
     checkArgument(device.getMac() != null || device.getName() != null ||
@@ -186,12 +221,14 @@ public class SpringDataDeviceRepository implements DeviceRepository {
     checkNonEmptyString(device.getName());
   }
 
+  /** helper methods for checking if the input string is non-empty (if present) */
   private void checkNonEmptyString(String s) {
     if (s != null) {
       checkArgument(!s.isEmpty());
     }
   }
 
+  /** check if the id is a valid number */
   private void checkId(String id) {
     try {
       Integer.parseInt(id);
@@ -200,11 +237,13 @@ public class SpringDataDeviceRepository implements DeviceRepository {
     }
   }
 
+  /** helper method for generate specification from device query */
   private Specification<Device> getSpec(DeviceQuery query) {
     check(query);
     return new DeviceSpec(query);
   }
 
+  /** validate the device query */
   private void check(DeviceQuery query) {
     checkNotNull(query);
     // NOTE trying out validator, not using DI
@@ -220,11 +259,13 @@ public class SpringDataDeviceRepository implements DeviceRepository {
     checkArgument(query.getOffset() % query.getLimit() == 0);
   }
 
+  /** generate deviceId */
   private int getId(String id) {
     checkId(id);
     return Integer.parseInt(id);
   }
 
+  /** modfiy device object for response */
   private Device processDeviceResponse(Device device) {
     checkNotNull(device);
     checkNotNull(device.getDeviceType());
@@ -232,6 +273,13 @@ public class SpringDataDeviceRepository implements DeviceRepository {
     return device;
   }
 
+  /**
+   * Handle event that violate the database schema constraints
+   * @param e target event
+   * @return application specific exception object, {@link ResourceNotExistException} if foreign key
+   * violation (related entity does not exist), {@link ResourceExistException} if unique key
+   * violation, otherwise {@link ServerErrorException}
+   */
   private RuntimeException handleIntegrityViolationException(DataIntegrityViolationException e) {
     if (!(e.getCause() instanceof ConstraintViolationException)) {
       // not recognized error
@@ -251,6 +299,9 @@ public class SpringDataDeviceRepository implements DeviceRepository {
     return new ServerErrorException(e);
   }
 
+  /**
+   * JPA Specification class for querying {@link Device}
+   */
   private class DeviceSpec implements Specification<Device> {
     private final DeviceQuery query;
 
@@ -290,6 +341,11 @@ public class SpringDataDeviceRepository implements DeviceRepository {
     }
   }
 
+  /**
+   * Normalize mac address before storing to database
+   * @param mac target mac address
+   * @return normalized mac address
+   */
   private String normalizeMac(String mac) {
     return mac.toLowerCase();
   }
