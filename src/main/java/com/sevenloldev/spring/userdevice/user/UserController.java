@@ -11,6 +11,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -53,13 +54,23 @@ public class UserController {
   @PutMapping("/users/{id}")
   public Map<String, String> updateUser(
       @PathVariable("id") String id,
-      @Validated(Optional.class) @RequestBody User user, BindingResult result) {
+      @Validated(Required.class) @RequestBody User user,
+      BindingResult result) {
     check(result);
     repo.update(id, user);
     return getUserIdResponse(id);
   }
 
-  // TODO partial update
+  /** Partial Update User API */
+  @PatchMapping("/users/{id}")
+  public Map<String, String> partiallyUpdateUser(
+      @PathVariable("id") String id,
+      @Validated(Optional.class) @RequestBody User user,
+      BindingResult result) {
+    check(result);
+    repo.update(id, user);
+    return getUserIdResponse(id);
+  }
 
   /** Delete User API */
   @DeleteMapping("/users/{id}")
