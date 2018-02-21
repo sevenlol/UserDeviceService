@@ -9,6 +9,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +21,7 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import static com.google.common.base.Preconditions.*;
 
@@ -32,7 +34,9 @@ public class JdbcUserRepository implements UserRepository {
   private static final String INSERT_SQL = "INSERT INTO " +
       "User(name, email, password, createdAt, updatedAt, enabled)" +
       "VALUES(?, ?, ?, ?, ?, ?)";
-  private static final String QUERY_SQL = "SELECT * FROM User %sORDER BY ? %s LIMIT ? OFFSET ?";
+  private static final String QUERY_SQL = "SELECT * FROM User %s" +
+      "ORDER BY %s %s LIMIT ? OFFSET ?";
+  private static final String COUNT_SQL = "SELECT count(*) FROM User %s";
   private static final String GET_BY_ID_SQL = "SELECT * FROM User WHERE id = ?";
   private static final String UPDATE_SQL = "UPDATE User SET %s WHERE id= ?";
   private static final String DELETE_SQL = "DELETE FROM User WHERE id= ?";
@@ -53,6 +57,7 @@ public class JdbcUserRepository implements UserRepository {
     user.setCreatedAt(LocalDateTime.now());
     user.setUpdatedAt(LocalDateTime.now());
 
+    // holder for retrieving the auto generated primary key
     KeyHolder holder = new GeneratedKeyHolder();
 
     try {
@@ -60,6 +65,7 @@ public class JdbcUserRepository implements UserRepository {
         final PreparedStatement ps = con.prepareStatement(
             INSERT_SQL,
             Statement.RETURN_GENERATED_KEYS);
+        // bind parameters
         ps.setString(1, user.getName());
         ps.setString(2, user.getEmail());
         ps.setString(3, user.getPassword());
@@ -69,8 +75,10 @@ public class JdbcUserRepository implements UserRepository {
         return ps;
       }, holder);
     } catch (DuplicateKeyException e) {
+      // user with the specified email/name already exists
       throw new ResourceExistException(e.getMessage(), e);
     } catch (Exception e) {
+      // operation failed
       throw new ServerErrorException(e);
     }
 
@@ -81,27 +89,36 @@ public class JdbcUserRepository implements UserRepository {
     return String.valueOf(holder.getKey().longValue());
   }
 
+  @Transactional
   @Override
   public UserQueryResult query(UserQuery query) {
+    // generate query string
     String queryStr = getQuerySql(query);
+    // generate SQL string for counting the total rows that matches the query
+    String countStr = getCountSql(query);
 
+    // arguments for the query operation
     List<Object> args = new ArrayList<>();
     for (Map.Entry<String, Object> entry : query.getKvs().entrySet()) {
       args.add(entry.getValue());
     }
-    args.add(query.getSortField());
     args.add(query.getLimit());
     args.add(query.getOffset());
     Object[] argArr = new Object[args.size()];
     args.toArray(argArr);
+    // arguments for the count operation (minus limit & offset)
+    Object[] countArgArr = new Object[args.size() - 2];
+    System.arraycopy(argArr, 0, countArgArr, 0, args.size() - 2);
 
     try {
       List<User> users = template.query(queryStr, argArr, new UserRowMapper());
-      return new UserQueryResult(users.size(), users);
+      Integer count = template.queryForObject(countStr, countArgArr, Integer.class);
+      return new UserQueryResult(count == null ? 0 : count, users);
     } catch (EmptyResultDataAccessException e) {
+      // no matching rows
       return new UserQueryResult(0, new ArrayList<>());
     } catch (Exception e) {
-      e.printStackTrace();
+      // operation failed
       throw new ServerErrorException(e);
     }
   }
@@ -114,8 +131,10 @@ public class JdbcUserRepository implements UserRepository {
       return template.queryForObject(GET_BY_ID_SQL,
           new Object[] { userId }, new UserRowMapper());
     } catch (EmptyResultDataAccessException e) {
+      // user does not exist
       throw new ResourceNotExistException(e);
     } catch (Exception e) {
+      // operation failed
       throw new ServerErrorException(e);
     }
   }
@@ -130,6 +149,7 @@ public class JdbcUserRepository implements UserRepository {
      rows = template.update((con) -> {
         final PreparedStatement ps = con.prepareStatement(getUpdateSql(user));
         int idx = 1;
+        // merge state
         if (user.getName() != null) {
           ps.setString(idx++, user.getName());
         }
@@ -144,8 +164,10 @@ public class JdbcUserRepository implements UserRepository {
         return ps;
       });
     } catch (DuplicateKeyException e) {
+      // update email/username already exists
       throw new ResourceExistException(e.getMessage(), e);
     } catch (Exception e) {
+      // operation failed
       throw new ServerErrorException(e);
     }
 
@@ -153,7 +175,8 @@ public class JdbcUserRepository implements UserRepository {
       // no such user
       throw new ResourceNotExistException();
     }
-    checkArgument(rows <= 1);
+    // should only get one user
+    checkArgument(rows == 1);
   }
 
   @Override
@@ -168,6 +191,7 @@ public class JdbcUserRepository implements UserRepository {
         return ps;
       });
     } catch (Exception e) {
+      // operation failed
       throw new ServerErrorException(e);
     }
 
@@ -175,7 +199,8 @@ public class JdbcUserRepository implements UserRepository {
       // no such user
       throw new ResourceNotExistException();
     }
-    checkArgument(rows <= 1);
+    // should only delete one user
+    checkArgument(rows == 1);
   }
 
   /**
@@ -226,7 +251,7 @@ public class JdbcUserRepository implements UserRepository {
     checkNotNull(query.getOffset());
     checkNotNull(query.getLimit());
     checkNotNull(query.getKvs());
-    checkNotNull(query.getSortField());
+    checkNotNull(query.getSort());
   }
 
   /**
@@ -257,6 +282,29 @@ public class JdbcUserRepository implements UserRepository {
    */
   private String getQuerySql(UserQuery query) {
     check(query);
+    return String.format(
+        QUERY_SQL,
+        getFilterSql(query),
+        query.getSort(),
+        query.isAsc() ? "ASC" : "DESC");
+  }
+
+  /**
+   * Generate SQL query string for counting total rows of the given {@link UserQuery}
+   * @param query target query
+   * @return generated SQL query string
+   */
+  private String getCountSql(UserQuery query) {
+    check(query);
+    return String.format(COUNT_SQL, getFilterSql(query));
+  }
+
+  /**
+   * Generate where clause from the given {@link UserQuery}
+   * @param query target query
+   * @return generated partial SQL query string (where clause)
+   */
+  private String getFilterSql(UserQuery query) {
     StringBuilder sb = new StringBuilder();
     if (!query.getKvs().entrySet().isEmpty()) {
       sb.append("WHERE ");
@@ -269,7 +317,7 @@ public class JdbcUserRepository implements UserRepository {
       sb.append(String.format("%s = ? ", entry.getKey()));
       count++;
     }
-    return String.format(QUERY_SQL, sb.toString(), query.isAsc() ? "ASC" : "DESC");
+    return sb.toString();
   }
 
   /**
