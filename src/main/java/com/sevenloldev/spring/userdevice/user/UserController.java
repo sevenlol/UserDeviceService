@@ -1,5 +1,6 @@
 package com.sevenloldev.spring.userdevice.user;
 
+import com.sevenloldev.spring.userdevice.util.response.QueryResponse;
 import com.sevenloldev.spring.userdevice.util.validation.Optional;
 import com.sevenloldev.spring.userdevice.util.validation.Required;
 import java.util.HashMap;
@@ -38,7 +39,7 @@ public class UserController {
 
   /** Query User API */
   @GetMapping("/users")
-  public UserQueryResult queryUsers(
+  public QueryResponse<User> queryUsers(
       @Valid UserQueryRequest req, BindingResult result) {
     check(result);
     return repo.query(new UserQuery(req));

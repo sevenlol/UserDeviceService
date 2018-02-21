@@ -3,6 +3,7 @@ package com.sevenloldev.spring.userdevice.user;
 import com.sevenloldev.spring.userdevice.util.error.ResourceExistException;
 import com.sevenloldev.spring.userdevice.util.error.ResourceNotExistException;
 import com.sevenloldev.spring.userdevice.util.error.ServerErrorException;
+import com.sevenloldev.spring.userdevice.util.response.QueryResponse;
 
 /**
  * Interface for managing {@link User} CRUD operations
@@ -25,7 +26,7 @@ public interface UserRepository {
    * @throws IllegalArgumentException if query is invalid
    * @throws ServerErrorException if the operation failed
    */
-  UserQueryResult query(UserQuery query);
+  QueryResponse<User> query(UserQuery query);
 
   /**
    * Retrieve {@link User} entity by user ID

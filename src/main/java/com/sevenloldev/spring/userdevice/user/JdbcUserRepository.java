@@ -3,6 +3,7 @@ package com.sevenloldev.spring.userdevice.user;
 import com.sevenloldev.spring.userdevice.util.error.ResourceExistException;
 import com.sevenloldev.spring.userdevice.util.error.ResourceNotExistException;
 import com.sevenloldev.spring.userdevice.util.error.ServerErrorException;
+import com.sevenloldev.spring.userdevice.util.response.QueryResponse;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -91,7 +92,7 @@ public class JdbcUserRepository implements UserRepository {
 
   @Transactional
   @Override
-  public UserQueryResult query(UserQuery query) {
+  public QueryResponse<User> query(UserQuery query) {
     // generate query string
     String queryStr = getQuerySql(query);
     // generate SQL string for counting the total rows that matches the query
@@ -113,10 +114,10 @@ public class JdbcUserRepository implements UserRepository {
     try {
       List<User> users = template.query(queryStr, argArr, new UserRowMapper());
       Integer count = template.queryForObject(countStr, countArgArr, Integer.class);
-      return new UserQueryResult(count == null ? 0 : count, users);
+      return new QueryResponse<>(count == null ? 0 : count, users);
     } catch (EmptyResultDataAccessException e) {
       // no matching rows
-      return new UserQueryResult(0, new ArrayList<>());
+      return new QueryResponse<>(0, new ArrayList<>());
     } catch (Exception e) {
       // operation failed
       throw new ServerErrorException(e);
