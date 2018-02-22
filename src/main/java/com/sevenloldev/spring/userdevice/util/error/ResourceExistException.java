@@ -1,5 +1,8 @@
 package com.sevenloldev.spring.userdevice.util.error;
 
+/**
+ * Exception indicating operation conflicts with existing resources
+ */
 public class ResourceExistException extends RuntimeException {
   public ResourceExistException() {
   }

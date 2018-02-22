@@ -1,5 +1,8 @@
 package com.sevenloldev.spring.userdevice.util.error;
 
+/**
+ * Exception indicating something went wrong on the server side
+ */
 public class ServerErrorException extends RuntimeException {
   public ServerErrorException() {
   }

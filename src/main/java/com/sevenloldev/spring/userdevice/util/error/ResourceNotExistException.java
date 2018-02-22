@@ -1,5 +1,8 @@
 package com.sevenloldev.spring.userdevice.util.error;
 
+/**
+ * Exception indicating resource targeted by the operation cannot be found
+ */
 public class ResourceNotExistException extends RuntimeException {
   public ResourceNotExistException() {
   }
