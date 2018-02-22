@@ -24,8 +24,6 @@ import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.validation.constraints.NotNull;
-import org.hibernate.annotations.Fetch;
-import org.hibernate.annotations.FetchMode;
 
 /**
  * Entity describing a binding between {@link User} and {@link Device}
@@ -42,19 +40,23 @@ public class Binding {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Integer id;
 
+  /** embedded device object */
   @NotNull(groups = Required.class)
-  @OneToOne(cascade = CascadeType.MERGE, fetch = FetchType.LAZY)
+  @OneToOne(cascade = CascadeType.DETACH, fetch = FetchType.LAZY)
   @JoinColumn(name = "deviceId", referencedColumnName = "id")
   @Access(AccessType.PROPERTY)
   private Device device;
 
+  /** separate device ID attribute */
   @Transient
   private Integer deviceId;
 
+  /** user ID attribute */
   @NotNull(groups = Required.class)
   @Column
   private Integer userId;
 
+  /** binding time */
   @Column
   private LocalDateTime boundAt;
 

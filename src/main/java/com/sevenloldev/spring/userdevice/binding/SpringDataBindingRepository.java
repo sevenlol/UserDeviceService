@@ -31,6 +31,10 @@ import org.springframework.stereotype.Repository;
 
 import static com.google.common.base.Preconditions.*;
 
+/**
+ * {@link BindingRepository} implementation using generated JPA repository
+ * interface
+ */
 @Repository
 public class SpringDataBindingRepository implements BindingRepository {
   private static final String USER_DEVICE_UNIQUE_CONSTRAINT_NAME = "userDevice";
@@ -42,14 +46,15 @@ public class SpringDataBindingRepository implements BindingRepository {
   public String create(Binding binding) {
     checkRequired(binding);
 
+    // set binding time
     binding.setBoundAt(LocalDateTime.now());
 
     Binding result = null;
     try {
       result = repo.save(binding);
     } catch (DataIntegrityViolationException e) {
-      e.printStackTrace();
       if (!(e.getCause() instanceof ConstraintViolationException)) {
+        // unknown integrity violation
         throw new ServerErrorException(e);
       }
 
@@ -78,7 +83,7 @@ public class SpringDataBindingRepository implements BindingRepository {
       Page<Binding> result = repo.findAll(spec, pageable);
       List<Binding> bindings = new ArrayList<>();
       for (Binding binding : result) {
-        // only id
+        // transform the query result and add to result list
         bindings.add(transform(binding, query.attachDevices()));
       }
       return new QueryResponse<>(
@@ -100,9 +105,11 @@ public class SpringDataBindingRepository implements BindingRepository {
       // get binding and device
       result = repo.getById(bindingId);
     } catch (Exception e) {
+      // operation failed
       throw new ServerErrorException(e);
     }
     if (!result.isPresent()) {
+      // binding with specified ID not found
       throw new ResourceNotExistException();
     }
     return transform(result.get(), true);
@@ -128,13 +135,16 @@ public class SpringDataBindingRepository implements BindingRepository {
     }
   }
 
+  /** check if the binding object contains all required field */
   private void checkRequired(Binding binding) {
     checkNotNull(binding);
+    // NOTE deviceId is set in device.id property
     checkNotNull(binding.getDevice());
     checkNotNull(binding.getDevice().getId());
     checkNotNull(binding.getUserId());
   }
 
+  // retrieve numeral ID from string
   private int getId(String id) {
     checkNotNull(id);
     try {
@@ -144,6 +154,13 @@ public class SpringDataBindingRepository implements BindingRepository {
     }
   }
 
+  /**
+   * transform binding from query to a valid response
+   * set deviceId field and clear out embedded device entity if necessary
+   * @param binding binding object retrieved from JPA repository
+   * @param attachDevice flag to determine whether to embed device object or not
+   * @return valid binding response object
+   */
   private Binding transform(Binding binding, boolean attachDevice) {
     checkNotNull(binding);
 
@@ -160,11 +177,13 @@ public class SpringDataBindingRepository implements BindingRepository {
     return binding;
   }
 
+  /** generate JPA specification from binding query */
   private Specification<Binding> getSpec(BindingQuery query) {
     check(query);
     return new BindingSpec(query);
   }
 
+  /** check if the binding query is valid */
   private void check(BindingQuery query) {
     checkNotNull(query);
     // NOTE trying out validator, not using DI
@@ -180,6 +199,9 @@ public class SpringDataBindingRepository implements BindingRepository {
     checkArgument(query.getOffset() % query.getLimit() == 0);
   }
 
+  /**
+   * JPA Specification class for querying {@link Binding}
+   */
   private class BindingSpec implements Specification<Binding> {
     private final BindingQuery query;
 

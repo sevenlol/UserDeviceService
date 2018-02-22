@@ -1,11 +1,12 @@
 package com.sevenloldev.spring.userdevice.binding;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 
+/**
+ * Request object for querying {@link Binding} entities
+ */
 public class BindingQuery {
   private static final String DEFAULT_SORT = "-boundAt";
   private static final String ENTITY_DEVICE = "device";

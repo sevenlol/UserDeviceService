@@ -11,6 +11,7 @@ import org.springframework.data.repository.CrudRepository;
 
 public interface JpaBindingRepository extends CrudRepository<Binding, Integer>,
     JpaSpecificationExecutor<Binding> {
+  /** get binding by ID with embedded device entity */
   @EntityGraph(value = "Binding.device", type = EntityGraphType.LOAD)
   Optional<Binding> getById(Integer id);
 }

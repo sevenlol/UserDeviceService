@@ -23,39 +23,47 @@ public class BindingController {
   @Autowired
   private BindingRepository repo;
 
+  /** Create Binding (User-Device) API */
   @PostMapping("/bindings")
   @ResponseStatus(HttpStatus.CREATED)
   public Map<String, String> createBinding(
-      @Validated(value = { Required.class }) @RequestBody Binding binding, BindingResult result) {
+      @Validated(value = { Required.class }) @RequestBody Binding binding,
+      BindingResult result) {
     System.out.println(result.getAllErrors());
     check(result);
     return getBindingIdResponse(repo.create(binding));
   }
 
+  /** Query Binding API */
   @GetMapping("/bindings")
-  public QueryResponse<Binding> queryBindings(@Valid BindingQuery query, BindingResult result) {
+  public QueryResponse<Binding> queryBindings(
+      @Valid BindingQuery query, BindingResult result) {
     System.out.println(query.getDeviceId());
     check(result);
     return repo.query(query);
   }
 
+  /** Get Binding by ID API */
   @GetMapping("/bindings/{id}")
   public Binding getBindingById(@PathVariable("id") String id) {
     return repo.get(id);
   }
 
+  /** Delete Binding API */
   @DeleteMapping("/bindings/{id}")
   public Map<String, String> deleteBinding(@PathVariable("id") String id) {
     repo.delete(id);
     return getBindingIdResponse(id);
   }
 
+  /** helper for checking validation result */
   private void check(BindingResult result) {
     if (result.hasErrors()) {
       throw new IllegalArgumentException();
     }
   }
 
+  /** helper for generating response */
   private Map<String, String> getBindingIdResponse(String id) {
     Map<String, String> response = new HashMap<>();
     response.put("binding_id", id);
