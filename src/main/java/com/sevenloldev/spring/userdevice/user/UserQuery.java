@@ -96,4 +96,15 @@ public class UserQuery {
   public boolean isAsc() {
     return asc;
   }
+
+  @Override
+  public String toString() {
+    return "UserQuery{" +
+        "limit=" + limit +
+        ", offset=" + offset +
+        ", kvs=" + kvs +
+        ", sort='" + sort + '\'' +
+        ", asc=" + asc +
+        '}';
+  }
 }

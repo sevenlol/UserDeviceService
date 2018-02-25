@@ -12,7 +12,7 @@ import org.hibernate.validator.constraints.NotEmpty;
  * Entity describing a user
  */
 public class User {
-  private static final boolean DEFAULT_ENABLED = false;
+  public static final boolean DEFAULT_ENABLED = true;
 
   /** unique user ID */
   private String id;
@@ -39,7 +39,7 @@ public class User {
   private LocalDateTime updatedAt;
 
   /** flag to enable/disable this user */
-  private Boolean enabled = DEFAULT_ENABLED;
+  private Boolean enabled;
 
   // getter and setter
 
@@ -97,6 +97,19 @@ public class User {
 
   public void setPassword(String password) {
     this.password = password;
+  }
+
+  @Override
+  public String toString() {
+    return "User{" +
+        "id='" + id + '\'' +
+        ", name='" + name + '\'' +
+        ", email='" + email + '\'' +
+        ", password='" + password + '\'' +
+        ", createdAt=" + createdAt +
+        ", updatedAt=" + updatedAt +
+        ", enabled=" + enabled +
+        '}';
   }
 }
 

@@ -6,6 +6,8 @@ import com.sevenloldev.spring.userdevice.util.validation.Required;
 import java.util.HashMap;
 import java.util.Map;
 import javax.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.BindingResult;
@@ -25,6 +27,8 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 public class UserController {
+  private final Logger logger = LoggerFactory.getLogger(UserController.class);
+
   @Autowired
   private UserRepository repo;
 
@@ -34,7 +38,9 @@ public class UserController {
   public Map<String, String> createUser(
       @Validated(Required.class) @RequestBody User user, BindingResult result) {
     check(result);
-    return getUserIdResponse(repo.create(user));
+    String userId = repo.create(user);
+    logger.info("User created, ID={}", userId);
+    return getUserIdResponse(userId);
   }
 
   /** Query User API */
@@ -42,13 +48,18 @@ public class UserController {
   public QueryResponse<User> queryUsers(
       @Valid UserQueryRequest req, BindingResult result) {
     check(result);
-    return repo.query(new UserQuery(req));
+    QueryResponse<User> response = repo.query(new UserQuery(req));
+    logger.info("User query succeeded, size={}, total={}",
+        response.getResults().size(), response.getTotal());
+    return response;
   }
 
   /** Get User by ID API */
   @GetMapping("/users/{id}")
   public User getUserById(@PathVariable("id") String id) {
-    return repo.get(id);
+    User user = repo.get(id);
+    logger.info("Retrieve user={}", user);
+    return user;
   }
 
   /** Update User API */
@@ -59,6 +70,7 @@ public class UserController {
       BindingResult result) {
     check(result);
     repo.update(id, user);
+    logger.info("User(id={}) updated, updated user: {}", id, user);
     return getUserIdResponse(id);
   }
 
@@ -70,6 +82,7 @@ public class UserController {
       BindingResult result) {
     check(result);
     repo.update(id, user);
+    logger.info("User(id={}) partially updated, update state: {}", id, user);
     return getUserIdResponse(id);
   }
 
@@ -78,11 +91,13 @@ public class UserController {
   public Map<String, String> deleteUser(
       @PathVariable("id") String id) {
     repo.delete(id);
+    logger.info("User(id={}) deleted", id);
     return getUserIdResponse(id);
   }
 
   private void check(BindingResult result) {
     if (result.hasErrors()) {
+      logger.debug(result.getAllErrors().toString());
       throw new IllegalArgumentException();
     }
   }

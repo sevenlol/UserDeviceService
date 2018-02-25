@@ -13,6 +13,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -31,6 +33,7 @@ import static com.google.common.base.Preconditions.*;
  */
 @Repository
 public class JdbcUserRepository implements UserRepository {
+  private final Logger logger = LoggerFactory.getLogger(JdbcUserRepository.class);
 
   private static final String INSERT_SQL = "INSERT INTO " +
       "User(name, email, password, createdAt, updatedAt, enabled)" +
@@ -52,11 +55,13 @@ public class JdbcUserRepository implements UserRepository {
 
     if (user.isEnabled() == null) {
       // enabled by default
-      user.setEnabled(true);
+      user.setEnabled(User.DEFAULT_ENABLED);
     }
 
     user.setCreatedAt(LocalDateTime.now());
     user.setUpdatedAt(LocalDateTime.now());
+
+    logger.debug("Create user object = {}", user);
 
     // holder for retrieving the auto generated primary key
     KeyHolder holder = new GeneratedKeyHolder();
@@ -77,16 +82,23 @@ public class JdbcUserRepository implements UserRepository {
       }, holder);
     } catch (DuplicateKeyException e) {
       // user with the specified email/name already exists
+      logger.error("Email={} or username={} already exists, error={}",
+          user.getEmail(), user.getName(), e.getMessage());
+      logger.debug("Error=", e);
       throw new ResourceExistException(e.getMessage(), e);
     } catch (Exception e) {
       // operation failed
+      logger.error("Create user failed, error={}", e.getMessage());
+      logger.debug("Error=", e);
       throw new ServerErrorException(e);
     }
 
     if (holder.getKey() == null) {
       // failed to retrieve generated primary key
+      logger.error("Failed to retrieve generated user ID");
       throw new ServerErrorException();
     }
+    logger.debug("User created successfully, ID={}, user={}", holder.getKey().longValue(), user);
     return String.valueOf(holder.getKey().longValue());
   }
 
@@ -97,6 +109,8 @@ public class JdbcUserRepository implements UserRepository {
     String queryStr = getQuerySql(query);
     // generate SQL string for counting the total rows that matches the query
     String countStr = getCountSql(query);
+
+    logger.debug("Query={}, query sql={}, count sql={}", query, queryStr, countStr);
 
     // arguments for the query operation
     List<Object> args = new ArrayList<>();
@@ -114,12 +128,17 @@ public class JdbcUserRepository implements UserRepository {
     try {
       List<User> users = template.query(queryStr, argArr, new UserRowMapper());
       Integer count = template.queryForObject(countStr, countArgArr, Integer.class);
+
+      logger.debug("Users={}, total={}", users, count);
       return new QueryResponse<>(count == null ? 0 : count, users);
     } catch (EmptyResultDataAccessException e) {
       // no matching rows
+      logger.debug("No matching users");
       return new QueryResponse<>(0, new ArrayList<>());
     } catch (Exception e) {
       // operation failed
+      logger.error("Failed to query users, error={}", e.getMessage());
+      logger.debug("Error=", e);
       throw new ServerErrorException(e);
     }
   }
@@ -128,14 +147,18 @@ public class JdbcUserRepository implements UserRepository {
   public User get(String id) {
     long userId = getUserId(id);
 
+    logger.debug("Retrieve user by ID={}, sql={}", userId, GET_BY_ID_SQL);
     try {
       return template.queryForObject(GET_BY_ID_SQL,
           new Object[] { userId }, new UserRowMapper());
     } catch (EmptyResultDataAccessException e) {
       // user does not exist
+      logger.error("User with ID={} does not exist", userId);
       throw new ResourceNotExistException(e);
     } catch (Exception e) {
       // operation failed
+      logger.error("Failed to retrieve user with ID={}, error={}", userId, e.getMessage());
+      logger.debug("Error=", e);
       throw new ServerErrorException(e);
     }
   }
@@ -144,6 +167,8 @@ public class JdbcUserRepository implements UserRepository {
   public void update(String id, User user) {
     long userId = getUserId(id);
     checkOptional(user);
+
+    logger.debug("Update user with ID={}, state={}", userId, user);
 
     int rows;
     try {
@@ -166,14 +191,20 @@ public class JdbcUserRepository implements UserRepository {
       });
     } catch (DuplicateKeyException e) {
       // update email/username already exists
+      logger.error("Failed to update user ID={}, duplicate email or username, error={}",
+          userId, e.getMessage());
+      logger.debug("Error=", e);
       throw new ResourceExistException(e.getMessage(), e);
     } catch (Exception e) {
       // operation failed
+      logger.error("Failed to update user ID={}, error={}", userId, e.getMessage());
+      logger.debug("Error=", e);
       throw new ServerErrorException(e);
     }
 
     if (rows == 0) {
       // no such user
+      logger.error("No user with ID={} to update", userId);
       throw new ResourceNotExistException();
     }
     // should only get one user
@@ -193,11 +224,14 @@ public class JdbcUserRepository implements UserRepository {
       });
     } catch (Exception e) {
       // operation failed
+      logger.error("Failed to delete user ID={}, error={}", userId, e.getMessage());
+      logger.debug("Error=", e);
       throw new ServerErrorException(e);
     }
 
     if (rows == 0) {
       // no such user
+      logger.error("No user with ID={} to delete", userId);
       throw new ResourceNotExistException();
     }
     // should only delete one user
