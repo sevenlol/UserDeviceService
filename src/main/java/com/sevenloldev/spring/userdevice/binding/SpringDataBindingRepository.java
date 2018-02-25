@@ -20,6 +20,8 @@ import javax.validation.Validation;
 import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
 import org.hibernate.exception.ConstraintViolationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -37,6 +39,8 @@ import static com.google.common.base.Preconditions.*;
  */
 @Repository
 public class SpringDataBindingRepository implements BindingRepository {
+  private final Logger logger = LoggerFactory.getLogger(SpringDataBindingRepository.class);
+
   private static final String USER_DEVICE_UNIQUE_CONSTRAINT_NAME = "userDevice";
 
   @Autowired
@@ -49,34 +53,50 @@ public class SpringDataBindingRepository implements BindingRepository {
     // set binding time
     binding.setBoundAt(LocalDateTime.now());
 
+    logger.debug("Create Binding object = {}", binding);
+
     Binding result = null;
     try {
       result = repo.save(binding);
+      logger.debug("Binding created, ID={}", result.getId());
     } catch (DataIntegrityViolationException e) {
+      logger.debug("Error=", e);
+
       if (!(e.getCause() instanceof ConstraintViolationException)) {
         // unknown integrity violation
+        logger.error("Failed to create Binding, error={}", e.getMessage());
         throw new ServerErrorException(e);
       }
 
       ConstraintViolationException ce = (ConstraintViolationException) e.getCause();
       if (USER_DEVICE_UNIQUE_CONSTRAINT_NAME.equalsIgnoreCase(ce.getConstraintName())) {
         // userId - deviceId binding already exists
+        logger.error("Failed to create Binding, (deviceId={},userId={}) pair already exists" +
+                ", error={}", binding.getDevice(), binding.getUserId(), e.getMessage());
         throw new ResourceExistException(e);
       }
 
       // user id or device id does not exist
+      logger.error("Failed to create Binding, Device(ID={}) or " +
+              "User(ID={}) does not exist, error={}",
+              binding.getDevice(), binding.getDevice(), e.getMessage());
       throw new ResourceNotExistException(e);
     }
     if (result.getBindingId() == null) {
       // failed to generate binding id, should not happen
+      logger.error("Failed to generate binding ID");
       throw new ServerErrorException();
     }
+    logger.debug("Binding created = {}", result);
     return result.getBindingId();
   }
 
   @Override
   public QueryResponse<Binding> query(BindingQuery query) {
     Specification<Binding> spec = getSpec(query);
+
+    logger.debug("Query={}, spec={}", query, spec);
+
     int page = query.getOffset() / query.getLimit();
     Pageable pageable = PageRequest.of(page, query.getLimit());
     try {
@@ -86,12 +106,14 @@ public class SpringDataBindingRepository implements BindingRepository {
         // transform the query result and add to result list
         bindings.add(transform(binding, query.attachDevices()));
       }
+      logger.debug("Bindings={}, total={}", bindings, result.getTotalElements());
       return new QueryResponse<>(
           (int) result.getTotalElements(),
           bindings
       );
     } catch (Exception e) {
-      e.printStackTrace();
+      logger.error("Failed to query Binding, error={}", e.getMessage());
+      logger.debug("Error=", e);
       throw new ServerErrorException(e);
     }
   }
@@ -106,13 +128,20 @@ public class SpringDataBindingRepository implements BindingRepository {
       result = repo.getById(bindingId);
     } catch (Exception e) {
       // operation failed
+      logger.error("Failed to retrieve Binding(ID={}), error={}", id, e.getMessage());
+      logger.debug("Error=", e);
       throw new ServerErrorException(e);
     }
     if (!result.isPresent()) {
       // binding with specified ID not found
+      logger.error("Binding(ID={}) does not exist", id);
       throw new ResourceNotExistException();
     }
-    return transform(result.get(), true);
+
+    Binding binding = transform(result.get(), true);
+
+    logger.debug("Retrieved Binding={}", binding);
+    return binding;
   }
 
   @Override
@@ -126,11 +155,17 @@ public class SpringDataBindingRepository implements BindingRepository {
     int bindingId = getId(id);
     try {
       repo.deleteById(bindingId);
+      logger.debug("Binding(ID={}) deleted successfully", id);
     } catch (EmptyResultDataAccessException e) {
       // binding does not exist
+      logger.error("Failed to delete Binding(ID={}), binding does not exist, error={}",
+          id, e.getMessage());
+      logger.debug("Error=", e);
       throw new ResourceNotExistException(e);
     } catch (Exception e) {
       // operation failed
+      logger.error("Failed to delete Binding(ID={}), error={}", id, e.getMessage());
+      logger.debug("Error=", e);
       throw new ServerErrorException(e);
     }
   }

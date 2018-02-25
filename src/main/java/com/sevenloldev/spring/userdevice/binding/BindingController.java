@@ -5,6 +5,8 @@ import com.sevenloldev.spring.userdevice.util.validation.Required;
 import java.util.HashMap;
 import java.util.Map;
 import javax.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.BindingResult;
@@ -19,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 public class BindingController {
+  private Logger logger = LoggerFactory.getLogger(BindingController.class);
 
   @Autowired
   private BindingRepository repo;
@@ -29,36 +32,43 @@ public class BindingController {
   public Map<String, String> createBinding(
       @Validated(value = { Required.class }) @RequestBody Binding binding,
       BindingResult result) {
-    System.out.println(result.getAllErrors());
     check(result);
-    return getBindingIdResponse(repo.create(binding));
+    String id = repo.create(binding);
+    logger.info("Binding created, ID={}, Binding={}", id, binding);
+    return getBindingIdResponse(id);
   }
 
   /** Query Binding API */
   @GetMapping("/bindings")
   public QueryResponse<Binding> queryBindings(
       @Valid BindingQuery query, BindingResult result) {
-    System.out.println(query.getDeviceId());
     check(result);
-    return repo.query(query);
+    QueryResponse<Binding> response = repo.query(query);
+    logger.info("Binding query={} succeeded, size={}, total={}",
+        query, response.getResults().size(), response.getTotal());
+    return response;
   }
 
   /** Get Binding by ID API */
   @GetMapping("/bindings/{id}")
   public Binding getBindingById(@PathVariable("id") String id) {
-    return repo.get(id);
+    Binding binding = repo.get(id);
+    logger.info("Retrieved Binding={}", binding);
+    return binding;
   }
 
   /** Delete Binding API */
   @DeleteMapping("/bindings/{id}")
   public Map<String, String> deleteBinding(@PathVariable("id") String id) {
     repo.delete(id);
+    logger.info("Binding(ID={}) deleted", id);
     return getBindingIdResponse(id);
   }
 
   /** helper for checking validation result */
   private void check(BindingResult result) {
     if (result.hasErrors()) {
+      logger.debug(result.getAllErrors().toString());
       throw new IllegalArgumentException();
     }
   }

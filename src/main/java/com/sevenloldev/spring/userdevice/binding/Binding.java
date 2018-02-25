@@ -135,4 +135,15 @@ public class Binding {
   public void setBoundAt(LocalDateTime boundAt) {
     this.boundAt = boundAt;
   }
+
+  @Override
+  public String toString() {
+    return "Binding{" +
+        "id=" + id +
+        ", device=" + device +
+        ", deviceId=" + deviceId +
+        ", userId=" + userId +
+        ", boundAt=" + boundAt +
+        '}';
+  }
 }

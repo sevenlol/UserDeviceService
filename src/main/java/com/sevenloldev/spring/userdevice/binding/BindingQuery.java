@@ -95,4 +95,16 @@ public class BindingQuery {
   public void setSort(String sort) {
     this.sort = sort;
   }
+
+  @Override
+  public String toString() {
+    return "BindingQuery{" +
+        "offset=" + offset +
+        ", limit=" + limit +
+        ", userId=" + userId +
+        ", deviceId=" + deviceId +
+        ", entities='" + entities + '\'' +
+        ", sort='" + sort + '\'' +
+        '}';
+  }
 }
