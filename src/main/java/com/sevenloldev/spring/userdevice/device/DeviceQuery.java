@@ -76,4 +76,16 @@ public class DeviceQuery {
   public void setSort(String sort) {
     this.sort = sort;
   }
+
+  @Override
+  public String toString() {
+    return "DeviceQuery{" +
+        "offset=" + offset +
+        ", limit=" + limit +
+        ", type=" + type +
+        ", mac='" + mac + '\'' +
+        ", name='" + name + '\'' +
+        ", sort='" + sort + '\'' +
+        '}';
+  }
 }

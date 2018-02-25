@@ -174,4 +174,18 @@ public class Device {
   public void setDeviceType(DeviceType deviceType) {
     this.deviceType = deviceType;
   }
+
+  @Override
+  public String toString() {
+    return "Device{" +
+        "id=" + id +
+        ", type=" + type +
+        ", name='" + name + '\'' +
+        ", mac='" + mac + '\'' +
+        ", pinCode=" + pinCode +
+        ", createdAt=" + createdAt +
+        ", updatedAt=" + updatedAt +
+        ", deviceType=" + deviceType +
+        '}';
+  }
 }

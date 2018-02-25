@@ -6,6 +6,8 @@ import com.sevenloldev.spring.userdevice.util.validation.Required;
 import java.util.HashMap;
 import java.util.Map;
 import javax.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.BindingResult;
@@ -25,6 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 public class DeviceController {
+  private Logger logger = LoggerFactory.getLogger(DeviceController.class);
 
   @Autowired
   private DeviceRepository repo;
@@ -35,7 +38,9 @@ public class DeviceController {
   public Map<String, String> createDevice(
       @Validated(Required.class) @RequestBody Device device, BindingResult result) {
     check(result);
-    return getDeviceResponse(repo.create(device));
+    String id = repo.create(device);
+    logger.info("Device created, ID={}", id);
+    return getDeviceResponse(id);
   }
 
   /** Query Devices API */
@@ -43,13 +48,18 @@ public class DeviceController {
   public QueryResponse<Device> queryDevices(
       @Valid DeviceQuery query, BindingResult result) {
     check(result);
-    return repo.query(query);
+    QueryResponse<Device> response = repo.query(query);
+    logger.info("Device query succeeded, size={}, total={}",
+        response.getResults().size(), response.getTotal());
+    return response;
   }
 
   /** Get Device By ID API */
   @GetMapping("/devices/{id}")
   public Device getDeviceById(@PathVariable("id") String id) {
-    return repo.get(id);
+    Device device = repo.get(id);
+    logger.info("Retrieved device={}", device);
+    return device;
   }
 
   /**
@@ -66,6 +76,7 @@ public class DeviceController {
       @Validated(Required.class) @RequestBody Device device, BindingResult result) {
     check(result);
     repo.update(id, device);
+    logger.info("Device(ID={}) updated, updated device object = {}", id, device);
     return getDeviceResponse(id);
   }
 
@@ -83,6 +94,7 @@ public class DeviceController {
       @Validated(Optional.class) @RequestBody Device device, BindingResult result) {
     check(result);
     repo.update(id, device);
+    logger.info("Device(ID={}) partially updated, update state = {}", id, device);
     return getDeviceResponse(id);
   }
 
@@ -90,6 +102,7 @@ public class DeviceController {
   @DeleteMapping("/devices/{id}")
   public Map<String, String> deleteDevice(@PathVariable("id") String id) {
     repo.delete(id);
+    logger.info("Device(ID={}) deleted", id);
     return getDeviceResponse(id);
   }
 
@@ -104,6 +117,7 @@ public class DeviceController {
   /** helper for checking validation result */
   private void check(BindingResult result) {
     if (result.hasErrors()) {
+      logger.debug(result.getAllErrors().toString());
       throw new IllegalArgumentException();
     }
   }

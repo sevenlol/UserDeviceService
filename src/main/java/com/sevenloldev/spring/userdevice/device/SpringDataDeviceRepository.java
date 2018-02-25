@@ -19,6 +19,8 @@ import javax.validation.Validation;
 import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
 import org.hibernate.exception.ConstraintViolationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -37,6 +39,8 @@ import static com.google.common.base.Preconditions.*;
  */
 @Repository
 public class SpringDataDeviceRepository implements DeviceRepository {
+  private final Logger logger = LoggerFactory.getLogger(SpringDataDeviceRepository.class);
+
   private static final String UNIQUE_MAC_CONSTRAINT_NAME = "mac";
 
   @Autowired
@@ -58,26 +62,38 @@ public class SpringDataDeviceRepository implements DeviceRepository {
     type.setType(device.getType());
     device.setDeviceType(type);
 
+    logger.debug("Create Device object = {}", device);
+
     Device result;
     try {
       result = repo.save(device);
     } catch (DataIntegrityViolationException e) {
       // duplicate mac address or invalid device type
+      logger.error("Failed to create Device due to duplicate MAC address" +
+          " or invalid type value, error={}", e.getMessage());
+      logger.debug("Error=", e);
       throw handleIntegrityViolationException(e);
     } catch (Exception e) {
       // operation failed
+      logger.error("Failed to create Device, error={}", e.getMessage());
+      logger.debug("Error=", e);
       throw new ServerErrorException(e);
     }
     if (result.getId() == null) {
       // failed to generate device ID
+      logger.error("Failed to generate device ID");
       throw new ServerErrorException();
     }
+    logger.debug("Device created, device={}", result);
     return result.getId().toString();
   }
 
   @Override
   public QueryResponse<Device> query(DeviceQuery query) {
     Specification<Device> spec = getSpec(query);
+
+    logger.debug("Query={}, spec={}", query, spec);
+
     int page = query.getOffset() / query.getLimit();
     Pageable pageable = PageRequest.of(page, query.getLimit());
     try {
@@ -89,6 +105,7 @@ public class SpringDataDeviceRepository implements DeviceRepository {
         type.setType(type.getDeviceType().getType());
         result.add(type);
       }
+      logger.debug("Devices={}, total={}", result, devices.getTotalElements());
       QueryResponse<Device> response = new QueryResponse<>(
           // total count that matches the spec (query)
           (int) devices.getTotalElements(),
@@ -98,6 +115,8 @@ public class SpringDataDeviceRepository implements DeviceRepository {
       return response;
     } catch (Exception e) {
       // operation failed
+      logger.error("Failed to query Device, error={}", e.getMessage());
+      logger.debug("Error=", e);
       throw new ServerErrorException(e);
     }
   }
@@ -110,13 +129,18 @@ public class SpringDataDeviceRepository implements DeviceRepository {
       result = repo.findById(deviceId);
     } catch (Exception e) {
       // operation failed
+      logger.error("Failed to retrieve Deivce(ID={})", id);
+      logger.debug("Error=", e);
       throw new ServerErrorException(e);
     }
     if (!result.isPresent()) {
       // no device associated with the given ID
+      logger.debug("Device(ID={}) does not exist", id);
       throw new ResourceNotExistException();
     }
-    return processDeviceResponse(result.get());
+    Device response = processDeviceResponse(result.get());
+    logger.debug("Retrieved Device={}", response);
+    return response;
   }
 
   @Override
@@ -125,12 +149,17 @@ public class SpringDataDeviceRepository implements DeviceRepository {
     // check if new state has invalid property
     checkOptional(device);
 
+    logger.debug("Update Device(ID={}), state={}", id, device);
+
     try {
       // retrieve and update
       // TODO generate update query dynamically
       getNUpdate(deviceId, device);
+      logger.debug("Device(ID={}) updated successfully");
     } catch (DataIntegrityViolationException e) {
       // mac already exist or device type does not exist
+      logger.error("Failed to update Device(ID={}), error={}", id, e.getMessage());
+      logger.debug("Error=", e);
       throw handleIntegrityViolationException(e);
     }
   }
@@ -142,9 +171,13 @@ public class SpringDataDeviceRepository implements DeviceRepository {
       repo.deleteById(deviceId);
     } catch (EmptyResultDataAccessException e) {
       // device does not exist
+      logger.error("Device(ID={}) does not exist", id);
+      logger.debug("Error=", e);
       throw new ResourceNotExistException(e);
     } catch (Exception e) {
       // operation failed
+      logger.error("Failed to delete Device(ID={}), error={}", id, e.getMessage());
+      logger.debug("Error=", e);
       throw new ServerErrorException(e);
     }
   }

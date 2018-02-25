@@ -154,8 +154,8 @@ public class SpringDataDeviceTypeRepository implements DeviceTypeRepository {
       if (deviceType.getManufacturer() != null) {
         typeInDb.setManufacturer(deviceType.getManufacturer());
       }
-      logger.debug("Updated DeviceType={}", typeInDb);
       repo.save(typeInDb);
+      logger.debug("Updated DeviceType={}", typeInDb);
     } catch (EmptyResultDataAccessException e) {
       // device type does not exist
       throw new ResourceNotExistException(e);
