@@ -58,7 +58,7 @@ public class UserController {
   @GetMapping("/users/{id}")
   public User getUserById(@PathVariable("id") String id) {
     User user = repo.get(id);
-    logger.info("Retrieve user={}", user);
+    logger.info("Retrieved user={}", user);
     return user;
   }
 

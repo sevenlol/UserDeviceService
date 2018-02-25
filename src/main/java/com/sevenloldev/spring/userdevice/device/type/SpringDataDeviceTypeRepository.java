@@ -15,6 +15,8 @@ import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
 import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.Page;
@@ -33,6 +35,7 @@ import static com.google.common.base.Preconditions.*;
  */
 @Repository
 public class SpringDataDeviceTypeRepository implements DeviceTypeRepository {
+  private Logger logger = LoggerFactory.getLogger(SpringDataDeviceTypeRepository.class);
 
   @Autowired
   private JpaDeviceTypeRepository repo;
@@ -41,19 +44,33 @@ public class SpringDataDeviceTypeRepository implements DeviceTypeRepository {
   public String create(DeviceType deviceType) {
     checkRequired(deviceType);
 
-    DeviceType res = repo.save(deviceType);
+    logger.debug("Create DeviceType object = {}", deviceType);
+
+    DeviceType res = null;
+    try {
+      res = repo.save(deviceType);
+    } catch (Exception e) {
+      logger.error("Failed to create DeviceType, error={}", e.getMessage());
+      logger.debug("Error=", e);
+      throw new ServerErrorException(e);
+    }
     if (res.getType() == null) {
       // failed to auto generate type value
+      logger.error("Failed to generate device type value");
       throw new ServerErrorException();
     }
 
     // return as string for flexibility
+    logger.debug("DeviceType created successfully, type={}, deviceType={}",
+        res.getType(), res);
     return res.getType().toString();
   }
 
   @Override
   public QueryResponse<DeviceType> query(DeviceTypeQuery query) {
     Specification<DeviceType> spec = getSpec(query);
+
+    logger.debug("Query={}, spec={}", query, spec);
 
     int page = query.getOffset() / query.getLimit();
     Pageable pageable = PageRequest.of(page, query.getLimit());
@@ -64,6 +81,9 @@ public class SpringDataDeviceTypeRepository implements DeviceTypeRepository {
       for (DeviceType type : deviceTypes) {
         result.add(type);
       }
+
+      logger.debug("DeviceTypes={}, total={}", result, deviceTypes.getTotalElements());
+
       QueryResponse<DeviceType> response = new QueryResponse<>(
           // total device types that satisfy current query condition
           (int) deviceTypes.getTotalElements(),
@@ -73,6 +93,9 @@ public class SpringDataDeviceTypeRepository implements DeviceTypeRepository {
       return response;
     } catch (Exception e) {
       // operation failed
+      logger.error("Failed to query DeviceType, query={}, error={}",
+          query, e.getMessage());
+      logger.debug("Error=", e);
       throw new ServerErrorException(e);
     }
   }
@@ -85,13 +108,19 @@ public class SpringDataDeviceTypeRepository implements DeviceTypeRepository {
       result = repo.findById(id);
     } catch (Exception e) {
       // operation failed
+      logger.error("Failed to retrieve DeviceType, type={}, error={}", type, e.getMessage());
+      logger.debug("Error=", e);
       throw new ServerErrorException(e);
     }
     if (!result.isPresent()) {
       // device type not found
+      logger.error("DeviceType(type={}) does not exist", type);
       throw new ResourceNotExistException();
     }
-    return result.get();
+
+    DeviceType deviceType = result.get();
+    logger.debug("Retrieved DeviceType={}", deviceType);
+    return deviceType;
   }
 
   @Override
@@ -102,10 +131,13 @@ public class SpringDataDeviceTypeRepository implements DeviceTypeRepository {
     // check if there are fields for update and there is no invalid fields
     checkOptional(deviceType);
 
+    logger.debug("Update DeviceType(type={}), state={}", type, deviceType);
+
     try {
       Optional<DeviceType> result = repo.findById(id);
       if (!result.isPresent()) {
         // device type not found
+        logger.error("DeviceType(type={}) does not exist", type);
         throw new EmptyResultDataAccessException(1);
       }
       DeviceType typeInDb = result.get();
@@ -122,12 +154,15 @@ public class SpringDataDeviceTypeRepository implements DeviceTypeRepository {
       if (deviceType.getManufacturer() != null) {
         typeInDb.setManufacturer(deviceType.getManufacturer());
       }
+      logger.debug("Updated DeviceType={}", typeInDb);
       repo.save(typeInDb);
     } catch (EmptyResultDataAccessException e) {
       // device type does not exist
       throw new ResourceNotExistException(e);
     } catch (Exception e) {
       // operation failed
+      logger.error("Failed to update DeviceType(type={}), error={}", type, e.getMessage());
+      logger.debug("Error=", e);
       throw new ServerErrorException(e);
     }
   }
@@ -139,9 +174,12 @@ public class SpringDataDeviceTypeRepository implements DeviceTypeRepository {
       repo.deleteById(id);
     } catch (EmptyResultDataAccessException e) {
       // device type does not exist
+      logger.error("DeviceType(type={}) does not exist", type);
       throw new ResourceNotExistException(e);
     } catch (Exception e) {
       // operation failed
+      logger.error("Failed to delete DeviceType(type={}), error={}", type, e.getMessage());
+      logger.debug("Error=", e);
       throw new ServerErrorException(e);
     }
   }

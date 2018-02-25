@@ -112,4 +112,15 @@ public class DeviceType implements Serializable {
     // FIXME modify this implementation
     return type == null ? 0 : type.hashCode();
   }
+
+  @Override
+  public String toString() {
+    return "DeviceType{" +
+        "type=" + type +
+        ", name='" + name + '\'' +
+        ", description='" + description + '\'' +
+        ", modelname='" + modelname + '\'' +
+        ", manufacturer='" + manufacturer + '\'' +
+        '}';
+  }
 }
