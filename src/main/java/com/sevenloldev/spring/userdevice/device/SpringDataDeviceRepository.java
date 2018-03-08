@@ -22,6 +22,8 @@ import org.hibernate.exception.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.Page;
@@ -121,6 +123,7 @@ public class SpringDataDeviceRepository implements DeviceRepository {
     }
   }
 
+  @Cacheable("devices")
   @Override
   public Device get(String id) {
     int deviceId = getId(id);
@@ -143,6 +146,7 @@ public class SpringDataDeviceRepository implements DeviceRepository {
     return response;
   }
 
+  @CacheEvict(cacheNames = "devices", key = "#id")
   @Override
   public void update(String id, Device device) {
     int deviceId = getId(id);
@@ -164,6 +168,7 @@ public class SpringDataDeviceRepository implements DeviceRepository {
     }
   }
 
+  @CacheEvict(cacheNames = "devices", key = "#id")
   @Override
   public void delete(String id) {
     int deviceId = getId(id);
@@ -303,6 +308,7 @@ public class SpringDataDeviceRepository implements DeviceRepository {
     checkNotNull(device);
     checkNotNull(device.getDeviceType());
     device.setType(device.getDeviceType().getType());
+    device.setDeviceType(null);
     return device;
   }
 

@@ -2,6 +2,7 @@ package com.sevenloldev.spring.userdevice.user;
 
 import com.sevenloldev.spring.userdevice.util.validation.Optional;
 import com.sevenloldev.spring.userdevice.util.validation.Required;
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import javax.validation.constraints.NotNull;
 import org.hibernate.validator.constraints.Email;
@@ -11,7 +12,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 /**
  * Entity describing a user
  */
-public class User {
+public class User implements Serializable {
   public static final boolean DEFAULT_ENABLED = true;
 
   /** unique user ID */

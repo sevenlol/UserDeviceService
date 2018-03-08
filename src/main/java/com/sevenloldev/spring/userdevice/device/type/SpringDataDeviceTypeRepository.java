@@ -18,6 +18,9 @@ import javax.validation.ValidatorFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -100,6 +103,7 @@ public class SpringDataDeviceTypeRepository implements DeviceTypeRepository {
     }
   }
 
+  @Cacheable("deviceTypes")
   @Override
   public DeviceType get(String type) {
     int id = getType(type);
@@ -124,6 +128,10 @@ public class SpringDataDeviceTypeRepository implements DeviceTypeRepository {
   }
 
   @Override
+  @Caching(evict = {
+      @CacheEvict(cacheNames = "deviceTypes", key = "#type"),
+      @CacheEvict(cacheNames = "devices", allEntries = true)
+  })
   @Transactional
   public void update(String type, DeviceType deviceType) {
     // FIXME find a better way
@@ -167,6 +175,10 @@ public class SpringDataDeviceTypeRepository implements DeviceTypeRepository {
     }
   }
 
+  @Caching(evict = {
+      @CacheEvict(cacheNames = "deviceTypes", key = "#type"),
+      @CacheEvict(cacheNames = "devices", allEntries = true)
+  })
   @Override
   public void delete(String type) {
     int id = getType(type);

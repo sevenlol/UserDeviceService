@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.sevenloldev.spring.userdevice.device.type.DeviceType;
 import com.sevenloldev.spring.userdevice.util.validation.Optional;
 import com.sevenloldev.spring.userdevice.util.validation.Required;
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import javax.persistence.Access;
 import javax.persistence.AccessType;
@@ -35,7 +36,7 @@ import static com.google.common.base.Preconditions.*;
 @Entity
 @Table(name = "Device")
 @JsonInclude(Include.NON_NULL)
-public class Device {
+public class Device implements Serializable {
 
   public Device() {}
 

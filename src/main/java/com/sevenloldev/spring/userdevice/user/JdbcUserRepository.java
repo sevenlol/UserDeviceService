@@ -16,6 +16,8 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -143,6 +145,7 @@ public class JdbcUserRepository implements UserRepository {
     }
   }
 
+  @Cacheable("users")
   @Override
   public User get(String id) {
     long userId = getUserId(id);
@@ -163,6 +166,7 @@ public class JdbcUserRepository implements UserRepository {
     }
   }
 
+  @CacheEvict(cacheNames = "users", key = "#id")
   @Override
   public void update(String id, User user) {
     long userId = getUserId(id);
@@ -211,6 +215,7 @@ public class JdbcUserRepository implements UserRepository {
     checkArgument(rows == 1);
   }
 
+  @CacheEvict(cacheNames = "users", key = "#id")
   @Override
   public void delete(String id) {
     long userId = getUserId(id);
