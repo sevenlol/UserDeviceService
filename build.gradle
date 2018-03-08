@@ -30,6 +30,7 @@ dependencies {
     }
     compile ('org.springframework.boot:spring-boot-starter-data-jpa')
     compile ('mysql:mysql-connector-java')
+    compile('io.sixhours:memcached-spring-boot-starter:1.2.0')
     compile group: 'org.hibernate', name: 'hibernate-core', version: '5.2.12.Final'
     compile group: 'org.hibernate', name: 'hibernate-entitymanager', version: '5.2.12.Final'
     compile group: 'org.hibernate', name: 'hibernate-validator', version: '5.4.1.Final'
