@@ -1,21 +1,36 @@
-group 'com.sevenloldev.spring'
+group 'sevenlol'
 version '0.0.1'
 
 buildscript {
     repositories {
         maven { url 'https://repo.spring.io/libs-snapshot' }
+        maven { url 'https://plugins.gradle.org/m2/' }
     }
 
     dependencies {
         classpath 'org.springframework.boot:spring-boot-gradle-plugin:2.0.0.BUILD-SNAPSHOT'
+        classpath 'gradle.plugin.com.palantir.gradle.docker:gradle-docker:0.13.0'
     }
 }
 
 apply plugin: 'java'
 apply plugin: 'org.springframework.boot'
 apply plugin: 'io.spring.dependency-management'
+apply plugin: 'com.palantir.docker'
 
 sourceCompatibility = 1.8
+
+bootJar {
+    baseName = 'user-device-service'
+    // version conflict with project version
+    // version '1.0.0'
+}
+
+docker {
+    name "${project.group}/${jar.baseName}:${project.version}"
+    files jar.archivePath
+    buildArgs(['JAR_FILE': "${jar.archiveName}"])
+}
 
 repositories {
     mavenCentral()
@@ -24,13 +39,13 @@ repositories {
 }
 
 dependencies {
-    compile 'org.springframework.boot:spring-boot-starter-web'
+    compile ('org.springframework.boot:spring-boot-starter-web')
     compile ('org.springframework.boot:spring-boot-starter-jdbc') {
         exclude group:'org.apache.tomcat', module: 'tomcat-jdbc'
     }
     compile ('org.springframework.boot:spring-boot-starter-data-jpa')
     compile ('mysql:mysql-connector-java')
-    compile('io.sixhours:memcached-spring-boot-starter:1.2.0')
+    compile ('io.sixhours:memcached-spring-boot-starter:1.2.0')
     compile group: 'org.hibernate', name: 'hibernate-core', version: '5.2.12.Final'
     compile group: 'org.hibernate', name: 'hibernate-entitymanager', version: '5.2.12.Final'
     compile group: 'org.hibernate', name: 'hibernate-validator', version: '5.4.1.Final'
