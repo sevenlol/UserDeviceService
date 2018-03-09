@@ -1,0 +1,20 @@
+version: '3'
+services:
+  api:
+    image: "sevenlol/user-device-service:0.0.1"
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./config:/config
+    depends_on:
+      - mysql
+      - cache
+  mysql:
+    image: "mysql"
+    command: --init-file /schema.sql
+    volumes:
+      - ./db/schema.sql:/schema.sql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD}
+  cache:
+    image: "memcached"
