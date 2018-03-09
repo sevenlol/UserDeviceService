@@ -1,0 +1,310 @@
+swagger: "2.0"
+info:
+  description: "APIs to manage user/device relationships in a home automation system."
+  version: "1.0.0"
+  title: "User Device Service API"
+  contact:
+    email: "sevenlol1007@gmail.com"
+  license:
+    name: "Apache 2.0"
+    url: "http://www.apache.org/licenses/LICENSE-2.0.html"
+host: "localhost:8080"
+basePath: "/"
+tags:
+- name: "user"
+  description: "Operations about users"
+- name: "device"
+  description: "Operations about devices, e.g., living room light"
+- name: "device type"
+  description: "Operations about categories of devices, e.g., light"
+- name: "binding"
+  description: "Operations about bindings between users and devices"
+schemes:
+- "http"
+paths:
+  /users:
+    post:
+      tags:
+      - "user"
+      summary: "Create a new user"
+      description: ""
+      operationId: "createUser"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "User object to be created"
+        required: true
+        schema:
+          $ref: "#/definitions/UserRequest"
+      responses:
+        201:
+          description: "user created"
+        400:
+          description: "malformed user request"
+        409:
+          description: "email or username already used"
+    get:
+      tags:
+      - "user"
+      summary: "Query users"
+      description: ""
+      operationId: "queryUsers"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - $ref: "#parameters/offsetParam"
+      - $ref: "#parameters/limitParam"
+      - in: "query"
+        name: "email"
+        type: "string"
+        description: "return users with this email address"
+      - in: "query"
+        name: "name"
+        type: "string"
+        description: "return users with this username"
+      - $ref: "#parameters/sortField"
+  /users/{userId}:
+    get:
+      tags:
+      - "user"
+      summary: "Retrieve user by ID"
+      description: ""
+      operationId: "getUserById"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "userId"
+        in: "path"
+        description: "ID of user to return"
+        required: true
+        type: "string"
+      responses:
+        200:
+          schema:
+            $ref: "#/definitions/User"
+          description: "operation succeeded"
+        404:
+          description: "user with speicified ID does not exist"
+    put:
+      tags:
+      - "user"
+      summary: "Update user"
+      description: ""
+      operationId: "updateUser"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "userId"
+        in: "path"
+        description: "ID of user to update"
+        required: true
+        type: "string"
+      - in: "body"
+        name: "body"
+        description: "User object to be updated"
+        required: true
+        schema:
+          $ref: "#/definitions/UserRequest"
+      responses:
+        200:
+          description: "operation succeeded"
+        400:
+          description: "malformed update request"
+        404:
+          description: "user with speicified ID does not exist"
+        409:
+          description: "email or username already used"
+    patch:
+      tags:
+      - "user"
+      summary: "Partially update user"
+      description: ""
+      operationId: "partialUpdateUser"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "userId"
+        in: "path"
+        description: "ID of user to update"
+        required: true
+        type: "string"
+      - in: "body"
+        name: "body"
+        description: "User object to be updated, **must contain at least one field**"
+        schema:
+          $ref: "#/definitions/UserRequest"
+      responses:
+        200:
+          description: "operation succeeded"
+        400:
+          description: "malformed update request"
+        404:
+          description: "user with speicified ID does not exist"
+        409:
+          description: "email or username already used"
+    delete:
+      tags:
+      - "user"
+      summary: "Delete user"
+      description: ""
+      operationId: "deleteUser"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "userId"
+        in: "path"
+        description: "ID of user to delete"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "operation succeeded"
+        404:
+          description: "user with speicified ID does not exist"
+definitions:
+  User:
+    type: "object"
+    required:
+    - "name"
+    - "email"
+    - "password"
+    properties:
+      id:
+        type: "string"
+      name:
+        type: "string"
+        description: "unique, should be username"
+      email:
+        type: "string"
+        description: "unique"
+      password:
+        type: "string"
+        description: "should be already hashed"
+      created_at:
+        type: "string"
+        format: "datetime"
+      updated_at:
+        type: "string"
+        format: "datetime"
+      enabled:
+        type: "boolean"
+  UserRequest:
+    type: "object"
+    required:
+    - "name"
+    - "email"
+    - "password"
+    properties:
+      name:
+        type: "string"
+        description: "unique, should be username"
+      email:
+        type: "string"
+        description: "unique"
+      password:
+        type: "string"
+        description: "should be already hashed"
+      enabled:
+        type: "boolean"
+  Device:
+    type: "object"
+    required:
+    - "type"
+    - "name"
+    - "mac"
+    - "pin_code"
+    properties:
+      id:
+        type: "string"
+      type:
+        type: "integer"
+        description: "primary key of DeviceType"
+      name:
+        type: "string"
+        description: "device name, 50 characters max"
+      mac:
+        type: "string"
+        format: "^[a-fA-F0-9]{12}$"
+        description: "unique MAC address"
+      pin_code:
+        type: "integer"
+      created_at:
+        type: "string"
+        format: "datetime"
+      updated_at:
+        type: "string"
+        format: "datetime"
+  DeviceType:
+    type: "object"
+    required:
+    - "name"
+    - "modelname"
+    - "manufacturer"
+    properties:
+      type:
+        type: "integer"
+      name:
+        type: "string"
+        description: "display name, 50 characters max"
+      description:
+        type: "string"
+        description: "device category description, 150 characters max"
+      modelname:
+        type: "string"
+        description: "device model name, 100 characters max"
+      manufacturer:
+        type: "string"
+        description: "device manufacturer name, 100 characters max"
+  Binding:
+    type: "object"
+    required:
+    - "user_id"
+    - "device_id"
+    properties:
+      id:
+        type: "string"
+        description: "binding id"
+      user_id:
+        type: "string"
+        description: "referenced user's id, pair(user_id, device_id) unique"
+      device_id:
+        type: "string"
+        description: "referenced device's id, pair(user_id, device_id) unique"
+      bound_at:
+        type: "string"
+        format: "datetime"
+        description: "binding time"
+parameters:
+  offsetParam:
+    name: offset
+    in: query
+    description: Number of skipped results, must be a multiple of limit
+    required: true
+    type: number
+    format: int32
+  limitParam:
+    name: limit
+    in: query
+    description: Limits the number of returned results
+    required: true
+    type: number
+    format: int32
+  sortField:
+    name: sort
+    in: query
+    description: Property name used to sort the result, starting with - means descending order
+    type: string
