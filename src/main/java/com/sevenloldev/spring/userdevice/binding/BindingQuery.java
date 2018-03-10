@@ -1,5 +1,6 @@
 package com.sevenloldev.spring.userdevice.binding;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
@@ -56,6 +57,7 @@ public class BindingQuery {
     return userId;
   }
 
+  @JsonProperty("user_id")
   public void setUserId(String userId) {
     try {
       this.userId = Integer.parseInt(userId);
@@ -64,6 +66,7 @@ public class BindingQuery {
     }
   }
 
+  @JsonProperty("device_id")
   public Integer getDeviceId() {
     return deviceId;
   }
