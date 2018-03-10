@@ -37,6 +37,8 @@ Basic CRUD API sets for each entity except for `Binding`. Due to the limited fie
 
 `PUT` are used for full update (replace the entire state/object), which means that the request body must contain the entire object. `PATCH` is used for partial update but the request body must contain at least one updatable field. Plus, if any updatable field is present, it must be valid.
 
+`Binding`'s query API support embedded entity, setting query parameter `entities` to `device` will query `Binding` with their associated `Device`.
+
 Swagger source is in `/doc/api.yaml` and the API document can be found [here](https://app.swaggerhub.com/api/sevenlol1007/user-device_service_api/1.0.0).
 
 ## Config
