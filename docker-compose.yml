@@ -1,9 +1,15 @@
 version: '3'
 services:
-  api:
-    image: "sevenlol/user-device-service:0.0.1"
+  rproxy:
+    image: "nginx:alpine"
     ports:
       - "8080:8080"
+    volumes:
+      - ./config/nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - api
+  api:
+    image: "sevenlol/user-device-service:0.0.1"
     volumes:
       - ./config:/config
     depends_on:
