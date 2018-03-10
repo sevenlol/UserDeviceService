@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS User (
     createdAt DATETIME NOT NULL,
     updatedAt DATETIME NOT NULL,
     enabled BOOLEAN NOT NULL
-);
+) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS DeviceType (
     type INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS DeviceType (
     description VARCHAR(150),
     modelname VARCHAR(100) NOT NULL,
     manufacturer VARCHAR(100) NOT NULL
-);
+) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS Device (
     id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -31,18 +31,18 @@ CREATE TABLE IF NOT EXISTS Device (
     FOREIGN KEY (type) REFERENCES DeviceType(type)
       ON DELETE CASCADE
       ON UPDATE CASCADE
-);
+) ENGINE=InnoDB;
 
 CREATE TABLE IF NOT EXISTS Binding (
     id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
     userId INT NOT NULL,
     deviceId INT NOT NULL,
     boundAt DATETIME NOT NULL,
-    UNIQUE KEY userId (userId, deviceId),
+    UNIQUE KEY userDevice (userId, deviceId),
     FOREIGN KEY (userId) REFERENCES User(id)
       ON DELETE CASCADE
       ON UPDATE CASCADE,
     FOREIGN KEY (deviceId) REFERENCES Device(id)
       ON DELETE CASCADE
       ON UPDATE CASCADE
-);
+) ENGINE=InnoDB;
