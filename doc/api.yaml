@@ -334,6 +334,259 @@ paths:
           description: "operation succeeded"
         404:
           description: "device with speicified ID does not exist"
+  /types/devices:
+    post:
+      tags:
+      - "device type"
+      summary: "Create a new device type"
+      description: ""
+      operationId: "createDeviceType"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "DeviceType object to be created"
+          required: true
+          schema:
+            $ref: "#/definitions/DeviceTypeRequest"
+      responses:
+        201:
+          description: "device type created"
+        400:
+          description: "malformed device type request"
+    get:
+      tags:
+      - "device type"
+      summary: "Query device types"
+      description: "Sorted by type value in descending order"
+      operationId: "queryDeviceTypes"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - $ref: "#parameters/offsetParam"
+      - $ref: "#parameters/limitParam"
+      - in: "query"
+        name: "name"
+        type: "string"
+        description: "return device types with specified name"
+      - in: "query"
+        name: "modelname"
+        type: "string"
+        description: "return device types with specified model name"
+      - in: "query"
+        name: "manufacturer"
+        type: "string"
+        description: "return device types with specified manufacturer name"
+      - $ref: "#parameters/sortField"
+  /types/devices/{type}:
+    get:
+      tags:
+      - "device type"
+      summary: "Retrieve device type by ID (type value)"
+      description: ""
+      operationId: "getDeviceTypeById"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "type"
+        in: "path"
+        description: "ID (type value) of device type to return"
+        required: true
+        type: "integer"
+      responses:
+        200:
+          schema:
+            $ref: "#/definitions/DeviceType"
+          description: "operation succeeded"
+        404:
+          description: "device type with speicified ID does not exist"
+    put:
+      tags:
+      - "device type"
+      summary: "Update device type"
+      description: ""
+      operationId: "updateDeviceType"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "type"
+        in: "path"
+        description: "ID of device type to update"
+        required: true
+        type: "string"
+      - in: "body"
+        name: "body"
+        description: "DeviceType object used to update"
+        required: true
+        schema:
+          $ref: "#/definitions/DeviceTypeRequest"
+      responses:
+        200:
+          description: "operation succeeded"
+        400:
+          description: "malformed update request"
+        404:
+          description: "device type with speicified ID does not exist"
+    patch:
+      tags:
+      - "device type"
+      summary: "Partial update device type"
+      description: ""
+      operationId: "partialUpdateDeviceType"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "type"
+        in: "path"
+        description: "ID of device type to update"
+        required: true
+        type: "string"
+      - in: "body"
+        name: "body"
+        description: "DeviceType object used to update, **must contain at least one field**"
+        schema:
+          $ref: "#/definitions/DeviceTypeRequest"
+      responses:
+        200:
+          description: "operation succeeded"
+        400:
+          description: "malformed update request"
+        404:
+          description: "device type with speicified ID does not exist"
+    delete:
+      tags:
+      - "device type"
+      summary: "Delete device type by ID"
+      description: ""
+      operationId: "deleteDeviceType"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "deviceId"
+        in: "path"
+        description: "ID of device type to delete"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "operation succeeded"
+        404:
+          description: "device type with speicified ID does not exist"
+  /bindings:
+    post:
+      tags:
+      - "binding"
+      summary: "Bind a device to a user"
+      description: ""
+      operationId: "createBinding"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "User and device ID to be bound"
+          required: true
+          schema:
+            $ref: "#/definitions/BindingRequest"
+      responses:
+        201:
+          description: "binding created"
+        400:
+          description: "malformed device type request"
+        404:
+          description: "specified user or device does not exist"
+        409:
+          description: "binding with this user-device pair already exists"
+    get:
+      tags:
+      - "binding"
+      summary: "Query bindings"
+      description: "Sorted by bound_at in descending order"
+      operationId: "queryDeviceTypes"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - $ref: "#parameters/offsetParam"
+      - $ref: "#parameters/limitParam"
+      - in: "query"
+        name: "user_id"
+        type: "string"
+        description: "return bindings that contain specified user"
+      - in: "query"
+        name: "device_id"
+        type: "string"
+        description: "return binding that contain specified device"
+      - in: "query"
+        name: "entities"
+        type: "string"
+        enum:
+        - "device"
+        description: "if this value is set to device, corresponding Device entity will be embedded in the response"
+      - $ref: "#parameters/sortField"
+  /bindings/{bindingId}:
+    get:
+      tags:
+      - "binding"
+      summary: "Retrieve binding by ID"
+      description: "Related Device entity will always be embedded in the response"
+      operationId: "getBindingById"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "bindingId"
+        in: "path"
+        description: "ID of binding to return"
+        required: true
+        type: "string"
+      responses:
+        200:
+          schema:
+            $ref: "#/definitions/Binding"
+          description: "operation succeeded"
+        404:
+          description: "binding with speicified ID does not exist"
+    delete:
+      tags:
+      - "binding"
+      summary: "Delete binding by ID"
+      description: """
+      operationId: "deleteBinding"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "bindingId"
+        in: "path"
+        description: "ID of binding to delete"
+        required: true
+        type: "string"
+      responses:
+        200:
+          schema:
+            $ref: "#/definitions/Binding"
+          description: "operation succeeded"
+        404:
+          description: "binding with speicified ID does not exist"
 definitions:
   User:
     type: "object"
@@ -448,6 +701,25 @@ definitions:
       manufacturer:
         type: "string"
         description: "device manufacturer name, 100 characters max"
+  DeviceTypeRequest:
+    type: "object"
+    required:
+    - "name"
+    - "modelname"
+    - "manufacturer"
+    properties:
+      name:
+        type: "string"
+        description: "display name, 50 characters max"
+      description:
+        type: "string"
+        description: "device category description, 150 characters max"
+      modelname:
+        type: "string"
+        description: "device model name, 100 characters max"
+      manufacturer:
+        type: "string"
+        description: "device manufacturer name, 100 characters max"
   Binding:
     type: "object"
     required:
@@ -467,6 +739,20 @@ definitions:
         type: "string"
         format: "datetime"
         description: "binding time"
+      device:
+        $ref: "#/definitions/Device"
+  BindingRequest:
+    type: "object"
+    required:
+    - "user_id"
+    - "device_id"
+    properties:
+      user_id:
+        type: "string"
+        description: "referenced user's id, pair(user_id, device_id) unique"
+      device_id:
+        type: "string"
+        description: "referenced device's id, pair(user_id, device_id) unique"
 parameters:
   offsetParam:
     name: offset
