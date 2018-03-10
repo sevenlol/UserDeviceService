@@ -175,6 +175,165 @@ paths:
           description: "operation succeeded"
         404:
           description: "user with speicified ID does not exist"
+  /devices:
+    post:
+      tags:
+      - "device"
+      summary: "Create a new device"
+      description: ""
+      operationId: "createDevice"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: "body"
+          name: "body"
+          description: "Device object to be created"
+          required: true
+          schema:
+            $ref: "#/definitions/DeviceRequest"
+      responses:
+        201:
+          description: "device created"
+        400:
+          description: "malformed device request"
+        404:
+          description: "specified device type does not exist"
+        409:
+          description: "mac address already used"
+    get:
+      tags:
+      - "device"
+      summary: "Query devices"
+      description: ""
+      operationId: "queryDevices"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - $ref: "#parameters/offsetParam"
+      - $ref: "#parameters/limitParam"
+      - in: "query"
+        name: "name"
+        type: "string"
+        description: "return devices with specified name"
+      - in: "query"
+        name: "mac"
+        type: "string"
+        description: "return devices with specified MAC address"
+      - in: "query"
+        name: "type"
+        type: "integer"
+        description: "return devices with specified type"
+      - $ref: "#parameters/sortField"
+  /devices/{deviceId}:
+    get:
+      tags:
+      - "device"
+      summary: "Retrieve device by ID"
+      description: ""
+      operationId: "getDeviceById"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "deviceId"
+        in: "path"
+        description: "ID of device to return"
+        required: true
+        type: "string"
+      responses:
+        200:
+          schema:
+            $ref: "#/definitions/Device"
+          description: "operation succeeded"
+        404:
+          description: "device with speicified ID does not exist"
+    put:
+      tags:
+      - "device"
+      summary: "Update device"
+      description: ""
+      operationId: "updateDevice"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "deviceId"
+        in: "path"
+        description: "ID of device to update"
+        required: true
+        type: "string"
+      - in: "body"
+        name: "body"
+        description: "Device object used to update"
+        required: true
+        schema:
+          $ref: "#/definitions/DeviceRequest"
+      responses:
+        200:
+          description: "operation succeeded"
+        400:
+          description: "malformed update request"
+        404:
+          description: "device (or device type used to update) with speicified ID does not exist"
+        409:
+          description: "MAC address already used"
+    patch:
+      tags:
+      - "device"
+      summary: "Partial update device"
+      description: ""
+      operationId: "partialUpdateDevice"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "deviceId"
+        in: "path"
+        description: "ID of device to update"
+        required: true
+        type: "string"
+      - in: "body"
+        name: "body"
+        description: "Device object used to update, **must contain at least one updatable field**"
+        schema:
+          $ref: "#/definitions/DeviceRequest"
+      responses:
+        200:
+          description: "operation succeeded"
+        400:
+          description: "malformed update request"
+        404:
+          description: "device (or device type used to update) with speicified ID does not exist"
+        409:
+          description: "MAC address already used"
+    delete:
+      tags:
+      - "device"
+      summary: "Delete device by ID"
+      description: ""
+      operationId: "deleteDevice"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "deviceId"
+        in: "path"
+        description: "ID of device to delete"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "operation succeeded"
+        404:
+          description: "device with speicified ID does not exist"
 definitions:
   User:
     type: "object"
@@ -248,6 +407,26 @@ definitions:
       updated_at:
         type: "string"
         format: "datetime"
+  DeviceRequest:
+    type: "object"
+    required:
+    - "type"
+    - "name"
+    - "mac"
+    - "pin_code"
+    properties:
+      type:
+        type: "integer"
+        description: "primary key of DeviceType"
+      name:
+        type: "string"
+        description: "device name, 50 characters max"
+      mac:
+        type: "string"
+        format: "^[a-fA-F0-9]{12}$"
+        description: "unique MAC address"
+      pin_code:
+        type: "integer"
   DeviceType:
     type: "object"
     required:
