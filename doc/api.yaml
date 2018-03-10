@@ -58,8 +58,8 @@ paths:
       produces:
       - "application/json"
       parameters:
-      - $ref: "#parameters/offsetParam"
-      - $ref: "#parameters/limitParam"
+      - $ref: "#/parameters/offsetParam"
+      - $ref: "#/parameters/limitParam"
       - in: "query"
         name: "email"
         type: "string"
@@ -68,7 +68,19 @@ paths:
         name: "name"
         type: "string"
         description: "return users with this username"
-      - $ref: "#parameters/sortField"
+      - $ref: "#/parameters/sortField"
+      responses:
+        200:
+          description: ""
+          schema:
+            type: "object"
+            properties:
+              total:
+                $ref: "#/parameters/totalResult"
+              results:
+                type: "array"
+                items:
+                  $ref: "#/definitions/User"
   /users/{userId}:
     get:
       tags:
@@ -213,8 +225,8 @@ paths:
       produces:
       - "application/json"
       parameters:
-      - $ref: "#parameters/offsetParam"
-      - $ref: "#parameters/limitParam"
+      - $ref: "#/parameters/offsetParam"
+      - $ref: "#/parameters/limitParam"
       - in: "query"
         name: "name"
         type: "string"
@@ -227,7 +239,19 @@ paths:
         name: "type"
         type: "integer"
         description: "return devices with specified type"
-      - $ref: "#parameters/sortField"
+      - $ref: "#/parameters/sortField"
+      responses:
+        200:
+          description: ""
+          schema:
+            type: "object"
+            properties:
+              total:
+                $ref: "#/parameters/totalResult"
+              results:
+                type: "array"
+                items:
+                  $ref: "#/definitions/Device"
   /devices/{deviceId}:
     get:
       tags:
@@ -368,8 +392,8 @@ paths:
       produces:
       - "application/json"
       parameters:
-      - $ref: "#parameters/offsetParam"
-      - $ref: "#parameters/limitParam"
+      - $ref: "#/parameters/offsetParam"
+      - $ref: "#/parameters/limitParam"
       - in: "query"
         name: "name"
         type: "string"
@@ -382,7 +406,19 @@ paths:
         name: "manufacturer"
         type: "string"
         description: "return device types with specified manufacturer name"
-      - $ref: "#parameters/sortField"
+      - $ref: "#/parameters/sortField"
+      responses:
+        200:
+          description: ""
+          schema:
+            type: "object"
+            properties:
+              total:
+                $ref: "#/parameters/totalResult"
+              results:
+                type: "array"
+                items:
+                  $ref: "#/definitions/DeviceType"
   /types/devices/{type}:
     get:
       tags:
@@ -475,7 +511,7 @@ paths:
       produces:
       - "application/json"
       parameters:
-      - name: "deviceId"
+      - name: "type"
         in: "path"
         description: "ID of device type to delete"
         required: true
@@ -517,14 +553,14 @@ paths:
       - "binding"
       summary: "Query bindings"
       description: "Sorted by bound_at in descending order"
-      operationId: "queryDeviceTypes"
+      operationId: "queryBindings"
       consumes:
       - "application/json"
       produces:
       - "application/json"
       parameters:
-      - $ref: "#parameters/offsetParam"
-      - $ref: "#parameters/limitParam"
+      - $ref: "#/parameters/offsetParam"
+      - $ref: "#/parameters/limitParam"
       - in: "query"
         name: "user_id"
         type: "string"
@@ -539,7 +575,19 @@ paths:
         enum:
         - "device"
         description: "if this value is set to device, corresponding Device entity will be embedded in the response"
-      - $ref: "#parameters/sortField"
+      - $ref: "#/parameters/sortField"
+      responses:
+        200:
+          description: ""
+          schema:
+            type: "object"
+            properties:
+              total:
+                $ref: "#/parameters/totalResult"
+              results:
+                type: "array"
+                items:
+                  $ref: "#/definitions/Binding"
   /bindings/{bindingId}:
     get:
       tags:
@@ -568,7 +616,7 @@ paths:
       tags:
       - "binding"
       summary: "Delete binding by ID"
-      description: """
+      description: ""
       operationId: "deleteBinding"
       consumes:
       - "application/json"
@@ -773,3 +821,8 @@ parameters:
     in: query
     description: Property name used to sort the result, starting with - means descending order
     type: string
+  totalResult:
+    name: total
+    in: query
+    description: Total number of items that match the given query
+    type: integer
