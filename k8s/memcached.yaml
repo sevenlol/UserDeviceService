@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: cache
+spec:
+  ports:
+  - port: 3306
+  selector:
+    app: cache
+  clusterIP: None
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cache
+spec:
+  selector:
+    matchLabels:
+      app: cache
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: cache
+    spec:
+      containers:
+      - image: memcached
+        name: cache
