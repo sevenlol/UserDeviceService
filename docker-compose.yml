@@ -12,6 +12,8 @@ services:
     image: "sevenlol/user-device-service:0.0.1"
     volumes:
       - ./config:/config
+    environment:
+      DB_PASSWORD: ${MYSQL_PASSWORD}
     depends_on:
       - mysql
       - cache
