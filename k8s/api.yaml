@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: user-device-api
+spec:
+  selector:
+    matchLabels:
+      app: user-device
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        app: user-device
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.7.9
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: nginx-config
+          mountPath: /etc/nginx
+      - image: sevenlol/user-device-service:0.0.1
+        name: user-device
+        env:
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql
+              key: password
+        volumeMounts:
+        - name: user-device-config
+          mountPath: /config
+      volumes:
+      - name: user-device-config
+        configMap:
+          name: user-device-config
+      - name: nginx-config
+        configMap:
+          name: nginx
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: user-device
+spec:
+  selector:
+    app: user-device
+  ports:
+  - protocol: TCP
+    port: 8080
+    targetPort: 80
+  type: NodePort
