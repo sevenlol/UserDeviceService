@@ -31,6 +31,18 @@ spec:
         volumeMounts:
         - name: user-device-config
           mountPath: /config
+        livenessProbe:
+          httpGet:
+            path: /healthy
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
       volumes:
       - name: user-device-config
         configMap:
