@@ -14,7 +14,8 @@ To show how I write basic REST APIs and try out some libraries.
 3. [MySQL](https://www.mysql.com): as the primary database
 4. [Memcached](http://memcached.org) for caching and [Nginx](https://www.nginx.com) as reverse proxy
 4. [Swagger/OpenAPI](https://swagger.io): for API documentation
-5. [Docker Compose](https://docs.docker.com/compose/) and [Kubernetes](https://kubernetes.io): for deployment
+5. [SLF4J](https://www.slf4j.org): logging
+6. [Docker Compose](https://docs.docker.com/compose/) and [Kubernetes](https://kubernetes.io): for deployment
 
 ## Entity
 
@@ -67,6 +68,41 @@ Run `docker-compose up -d` to spin up nginx, memcached, api server and MySQL.
 Nginx config file is in `/config/nginx.conf`. MySQL schema (`/db/schema.sql`) will be imported with `--init-file` command. MySQL password will be set to environment variable `MYSQL_PASSWORD`. `/scripts/cleanup.sh` can be used to cleanup dangling volumn and such.
 
 **2. Kubernetes**
-TODO
+
+Deployed using [minikube](https://github.com/kubernetes/minikube).
+
+All yaml files are stored in `k8s/` directory:
+1. `pv001.yaml`: Persistent volume with `hostpath` for MySQL.
+2. `mysql-pw.yaml`, `mysql-schema.yaml`: `Secret` for MySQL password and `ConfigMap` for database schema.
+3. `mysql.yaml`: Persistent volume claim for storage, deployment for a single MySQL instance and headless service for discovery. Schema will be mounted at path `/docker-entrypoint-initdb.d` and tables will be created on startup.
+4. `memcached.yaml`: A headless service and a single instance deployment for memcached.
+5. `api-config.yaml`: `ConfigMap`s containing nginx and api server's config file.
+6. `api.yaml`: A deployment that manages pods containing one nginx server as reverse proxy and one api server. A service for exposing the api server using `NodePort`.
+
+Readiness and liviness probe with path `/ready` and `/healthy` is configured for the api server container.
+
+**Build**
+
+Link minikube with the local docker daemon
+
+`eval $(minikube docker-env)`
+
+Build
+
+`./gradlew build docker`
+
+**Deploy**
+
+Deploy the objects in the following order.
+1. `pv001.yaml`
+2. `mysql-pw.yaml`, `mysql-schema.yaml`
+3. `mysql.yaml`
+4. `memcached.yaml`
+5. `api-config.yaml`
+6. `api.yaml`
+
+Retrieve the service url with `minikube service user-device --url`
+
+
 
 
