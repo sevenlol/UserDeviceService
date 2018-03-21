@@ -103,6 +103,15 @@ Deploy the objects in the following order.
 
 Retrieve the service url with `minikube service user-device --url`
 
+## Examples
 
+Scripts in directory `examples/` show basic API calls of `UserDeviceService`.
 
+These scripts assume the server listening on `localhost:8080`. If not, modify the `HOST` & `PORT` variables.
 
+If the service is deployed using `kubernetes`, use `kubectl get pods` to get one of the `pod` ID of the API server, e.g., `user-device-api-7c4456f6b5-57qmf`. After that, use `kubectl port-forward user-device-api-7c4456f6b5-57qmf 8080:8080` to consume the service using `localhost:8080`.
+
+The description of each script is shown below:
+1. `01_device_type_basic.sh`, `02_device_basic.sh`, `03_user_basic.sh`: CRUD examples for `DeviceType`, `Device` and `User`.
+2. `04_binding_basic.sh`: Create `Binding` between a `User` & `Device`.
+3. `05_binding_query.sh`: Different ways to query `Binding`.
