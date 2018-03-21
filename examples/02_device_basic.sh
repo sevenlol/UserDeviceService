@@ -85,3 +85,6 @@ curl -sX DELETE $URL -o /dev/null
 echo "Retrieve deleted DeviceType($DEVICE_TYPE):"
 curl -s $URL
 echo
+
+# delete DeviceType
+curl -sX DELETE http://$HOST:$PORT/types/devices/$DEVICE_TYPE -o /dev/null
