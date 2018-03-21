@@ -4,7 +4,8 @@ metadata:
   name: cache
 spec:
   ports:
-  - port: 3306
+  - port: 11211
+    targetPort: 11211
   selector:
     app: cache
   clusterIP: None
