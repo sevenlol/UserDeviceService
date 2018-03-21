@@ -80,9 +80,9 @@ echo "======================="
 echo "Delete Device($DEVICE_ID)"
 curl -sX DELETE $URL -o /dev/null
 
-# try to retrieve the deleted DeviceType
+# try to retrieve the deleted Device
 # and fail (404)
-echo "Retrieve deleted DeviceType($DEVICE_TYPE):"
+echo "Retrieve deleted Device($DEVICE_ID):"
 curl -s $URL
 echo
 
